@@ -1,2 +1,16 @@
-TYPE(TypeA, { I32 member1, F32 member2; })
-TYPE(TypeB, { PTR memberX, STR memberY; })
+TYPE(CollisionShape, PTR)
+TYPE(RigidBodyHandle, PTR)
+
+TYPE( RigidBodyType, enum {
+  EV_RIGIDBODY_DYNAMIC,
+  EV_RIGIDBODY_KINEMATIC,
+  EV_RIGIDBODY_STATIC,
+})
+
+TYPE( RigidBody, struct {
+  U32 entt_id;
+  CollisionShape collisionShape;
+  RigidBodyType type;
+  F32 mass;
+  F32 restitution;
+})
