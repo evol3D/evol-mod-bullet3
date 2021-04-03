@@ -2,4 +2,10 @@ EV_NS_DEF_BEGIN(Physics)
 
 EV_NS_DEF_FN(U32, update, (F32, deltaTime))
 
+EV_NS_DEF_FN(CollisionShape, createBoxShape, (F32, half_x), (F32, half_y), (F32, half_z))
+EV_NS_DEF_FN(CollisionShape, createSphereShape, (F32, radius))
+EV_NS_DEF_FN(RigidBody, createRigidBody, (RigidBodyInfo *, rbInfo))
+
+EV_NS_DEF_FN(void, setRigidBodyPosition, (RigidBody, rb), (Vec3, pos))
+
 EV_NS_DEF_END(Physics)

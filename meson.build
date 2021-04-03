@@ -1,6 +1,9 @@
 project('evmod_physics', 'c', 'cpp',
 version : '0.1',
-default_options : ['warning_level=3', 'c_std=c11'])
+default_options : [
+  'warning_level=3', 
+  'c_std=c11',
+])
 
 # Meson modules import
 fs = import('fs')
@@ -14,6 +17,11 @@ bullet_opt_var.add_cmake_defines({'BUILD_OPENGL3_DEMOS': false})
 bullet_opt_var.add_cmake_defines({'BUILD_BULLET2_DEMOS': false})
 bullet_opt_var.add_cmake_defines({'BULLET_PHYSICS': true})
 
+bullet_opt_var.add_cmake_defines({'CMAKE_BUILD_TYPE': 'Debug'})
+bullet_opt_var.add_cmake_defines({'USE_MSVC_RUNTIME_LIBRARY_DLL': true})
+bullet_opt_var.add_cmake_defines({'USE_MSVC_RELEASE_RUNTIME_ALWAYS': false})
+
+
 bullet3_proj = cmake.subproject('bullet3', options: bullet_opt_var)
 bullet_dynamics_dep = bullet3_proj.dependency('BulletDynamics')
 bullet_collision_dep = bullet3_proj.dependency('BulletCollision')
@@ -26,22 +34,25 @@ mod_src = [
   'src/cpp/physics.cpp',
 ]
 
-mod_args = []
+cmod_args = []
+cppmod_args = []
 
 # GCC arg for ms-extensions (specifically, nameless anonymous structs/unions)
 if build_machine.system() != 'windows'
-  mod_args += '-fms-extensions'
+  cmod_args += '-fms-extensions'
+else
+  cppmod_args += ['/Zc:preprocessor']
 endif
 
 # Metafiles c_args defs
 if fs.is_file('meta/evmod.namespaces')
-  mod_args += '-DEVMOD_NAMESPACES_DEF'
+  cmod_args += '-DEVMOD_NAMESPACES_DEF'
 endif
 if fs.is_file('meta/evmod.events')
-  mod_args += '-DEVMOD_EVENTS_DEF'
+  cmod_args += '-DEVMOD_EVENTS_DEF'
 endif
 if fs.is_file('meta/evmod.types')
-  mod_args += '-DEVMOD_TYPES_DEF'
+  cmod_args += '-DEVMOD_TYPES_DEF'
 endif
 
 mod_incdir = ['..', 'include']
@@ -69,13 +80,14 @@ configure_file(
   output: moduleconfig + '.h',
   capture: true
 )
-mod_args += '-DEVMOD_LUA='+meson.project_build_root()+'/'+moduleconfig+'.h'
+cmod_args += '-DEVMOD_LUA='+meson.project_build_root()+'/'+moduleconfig+'.h'
 
 module = shared_module(
   'evmod_bullet', mod_src,
   include_directories: mod_incdir,
   dependencies: mod_deps,
-  c_args: mod_args,
+  c_args: cmod_args,
+  cpp_args: cppmod_args,
 )
 
 mod_dep = declare_dependency(
