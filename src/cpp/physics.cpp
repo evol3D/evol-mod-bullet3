@@ -82,6 +82,7 @@ _ev_physics_deinit()
   clearCollisionObjects();
   clearCollisionShapes();
 
+  delete PhysicsData.debugDrawer;
 
   delete PhysicsData.world;
   delete PhysicsData.constraintSolver;
@@ -103,9 +104,11 @@ _ev_physics_update(
   // If visualization enabled
   // This should be a mix of a config var and
   // a compile time directive.
-  PhysicsData.debugDrawer->startFrame();
-  PhysicsData.world->debugDrawWorld();
-  PhysicsData.debugDrawer->endFrame();
+  if(!PhysicsData.debugDrawer->windowDestroyed) {
+    PhysicsData.debugDrawer->startFrame();
+    PhysicsData.world->debugDrawWorld();
+    PhysicsData.debugDrawer->endFrame();
+  }
 
   return 0;
 }

@@ -19,6 +19,9 @@ private:
     WindowHandle dbgWindow;
 
 public:
+    I32 windowDestroyed;
+
+public:
     BulletDbg()
     {
         window_module = evol_loadmodule("window");
@@ -28,6 +31,8 @@ public:
         IMPORT_NAMESPACE(imGL, window_module);
 
         dbgWindow = DbgWindow->create(800, 600, "Physics Debug");
+
+        windowDestroyed = 0;
     }
 
     ~BulletDbg()
@@ -106,5 +111,6 @@ public:
     endFrame()
     {
         DbgWindow->endFrame(dbgWindow);
+        windowDestroyed = DbgWindow->update(dbgWindow);
     }
 };
