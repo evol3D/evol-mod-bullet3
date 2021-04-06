@@ -17,7 +17,7 @@ bullet_opt_var.add_cmake_defines({'BUILD_OPENGL3_DEMOS': false})
 bullet_opt_var.add_cmake_defines({'BUILD_BULLET2_DEMOS': false})
 bullet_opt_var.add_cmake_defines({'BULLET_PHYSICS': true})
 
-bullet_opt_var.add_cmake_defines({'CMAKE_BUILD_TYPE': 'Debug'})
+bullet_opt_var.add_cmake_defines({'CMAKE_BUILD_TYPE': get_option('buildtype')})
 bullet_opt_var.add_cmake_defines({'USE_MSVC_RUNTIME_LIBRARY_DLL': true})
 bullet_opt_var.add_cmake_defines({'USE_MSVC_RELEASE_RUNTIME_ALWAYS': false})
 
