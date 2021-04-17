@@ -1,15 +1,15 @@
-TYPE(CollisionShape, PTR)
-TYPE(RigidBody, PTR)
+TYPE(CollisionShapeHandle, PTR)
+TYPE(RigidbodyHandle, PTR)
 
-TYPE( RigidBodyType, enum {
+TYPE( RigidbodyType, enum {
   EV_RIGIDBODY_DYNAMIC,
   EV_RIGIDBODY_KINEMATIC,
   EV_RIGIDBODY_STATIC
 })
 
-TYPE( RigidBodyInfo, struct {
-  RigidBodyType type;
-  CollisionShape collisionShape;
+TYPE( RigidbodyInfo, struct {
+  RigidbodyType type;
+  CollisionShapeHandle collisionShape;
   F32 mass;
   F32 restitution;
 })

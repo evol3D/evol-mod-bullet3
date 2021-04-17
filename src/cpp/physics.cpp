@@ -15,6 +15,9 @@ extern "C" {
 
 #include <mutex>
 
+#define ev2btVec3(v) btVector3(v.x, v.y, v.z)
+#define bt2evVec3(v) {{  v.x(), v.y(), v.z() }}
+
 struct ev_PhysicsData {
   public:
   btCollisionConfiguration *collisionConfiguration;
@@ -118,21 +121,19 @@ _ev_physics_update(
     PhysicsData.collisionShapes.push_back(x); \
   } while (0)
 
-CollisionShape
-_ev_physics_createboxshape(
-  F32 half_x,
-  F32 half_y,
-  F32 half_z)
+CollisionShapeHandle
+_ev_collisionshape_newbox(
+  Vec3 half_extents)
 {
-  btCollisionShape* box = new btBoxShape(btVector3(half_x, half_y, half_z));
+  btCollisionShape* box = new btBoxShape(ev2btVec3(half_extents));
 
   STORE_COLLISION_SHAPE(box);
 
   return box;
 }
 
-CollisionShape
-_ev_physics_createsphereshape(
+CollisionShapeHandle
+_ev_collisionshape_newsphere(
   F32 radius)
 {
   btCollisionShape *sphere = new btSphereShape(radius);
@@ -142,9 +143,9 @@ _ev_physics_createsphereshape(
   return sphere;
 }
 
-RigidBody
-_ev_physics_createrigidbody(
-  RigidBodyInfo *rbInfo)
+RigidbodyHandle
+_ev_rigidbody_new(
+  RigidbodyInfo *rbInfo)
 {
   bool isDynamic = rbInfo->type == EV_RIGIDBODY_DYNAMIC && rbInfo->mass > 0.;
 
@@ -171,10 +172,28 @@ _ev_physics_createrigidbody(
 }
 
 void
-_ev_physics_setrigidbodyposition(
-    RigidBody rb,
+_ev_rigidbody_setposition(
+    RigidbodyHandle rb,
     Vec3 pos)
 {
   btRigidBody* body = reinterpret_cast<btRigidBody *>(rb);
-  body->getWorldTransform().setOrigin(btVector3(pos[0], pos[1], pos[2]));
+  body->getWorldTransform().setOrigin(ev2btVec3(pos));
+}
+
+Vec3
+_ev_rigidbody_getposition(
+    RigidbodyHandle rb)
+{
+  btRigidBody* body = reinterpret_cast<btRigidBody *>(rb);
+  btVector3 &position = body->getWorldTransform().getOrigin();
+  return bt2evVec3(position);
+}
+
+void
+_ev_rigidbody_addforce(
+    RigidbodyHandle rb,
+    Vec3 f)
+{
+  btRigidBody* body = reinterpret_cast<btRigidBody *>(rb);
+  body->applyCentralForce(ev2btVec3(f));
 }

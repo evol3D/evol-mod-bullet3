@@ -14,24 +14,31 @@ U32
 _ev_physics_update(
     F32 deltaTime);
 
-CollisionShape 
-_ev_physics_createboxshape(
-    F32 half_x, 
-    F32 half_y, 
-    F32 half_z);
+CollisionShapeHandle 
+_ev_collisionshape_newbox(
+    Vec3 half_extents);
 
-CollisionShape 
-_ev_physics_createsphereshape(
+CollisionShapeHandle 
+_ev_collisionshape_newsphere(
     F32 radius);
 
-RigidBody 
-_ev_physics_createrigidbody(
-    RigidBodyInfo *rbInfo);
+RigidbodyHandle 
+_ev_rigidbody_new(
+    RigidbodyInfo *rbInfo);
 
 void
-_ev_physics_setrigidbodyposition(
-    RigidBody rb,
+_ev_rigidbody_setposition(
+    RigidbodyHandle rb,
     Vec3 pos);
+
+Vec3
+_ev_rigidbody_getposition(
+    RigidbodyHandle rb);
+
+void
+_ev_rigidbody_addforce(
+    RigidbodyHandle rb,
+    Vec3 f);
 
 #if defined(__cplusplus)
 }
