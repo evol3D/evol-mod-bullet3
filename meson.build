@@ -56,3 +56,5 @@ mod_dep = declare_dependency(
 )
 
 meson.override_dependency('evmod_physics', mod_dep)
+
+configure_file(input: 'src/lua/script_api.lua', output: 'script_api.lua', copy:true)

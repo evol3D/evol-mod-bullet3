@@ -13,9 +13,13 @@ struct {
   ECSEntityID rigidbodyComponentID;
 } Data;
 
+void 
+init_scripting_api();
+
 EV_CONSTRUCTOR 
 { 
   Data.ecs_mod = NULL;
+  init_scripting_api();
   return _ev_physics_init(); 
 }
 
@@ -60,6 +64,13 @@ _ev_rigidbody_getfromentity(
     return rbComp->rbHandle;
 }
 
+RigidbodyComponent
+_ev_rigidbody_getcomponentfromentity(
+    ECSEntityID entt)
+{
+  return *(RigidbodyComponent*)ECS->getComponent(entt, Data.rigidbodyComponentID);
+}
+
 EV_BINDINGS
 {
     EV_NS_BIND_FN(Physics, update, _ev_physics_update);
@@ -74,4 +85,67 @@ EV_BINDINGS
     EV_NS_BIND_FN(Rigidbody, addToEntity, _ev_rigidbody_addtoentity);
     EV_NS_BIND_FN(Rigidbody, getFromEntity, _ev_rigidbody_getfromentity);
     EV_NS_BIND_FN(Rigidbody, addForce, _ev_rigidbody_addforce);
+}
+
+// Initializing the scripting API
+#define TYPE_MODULE evmod_script
+#define NAMESPACE_MODULE evmod_script
+#include <evol/meta/type_import.h>
+#include <evol/meta/namespace_import.h>
+
+void
+_ev_rigidbody_getfromentity_wrapper(
+    RigidbodyHandle *out, 
+    ECSEntityID *entt)
+{
+  *out = _ev_rigidbody_getfromentity(*entt);
+}
+
+void _ev_rigidbody_getcomponentfromentity_wrapper(
+    RigidbodyComponent *out,
+    ECSEntityID *entt)
+{
+  *out = _ev_rigidbody_getcomponentfromentity(*entt);
+}
+
+void
+_ev_rigidbody_addforce_wrapper(
+    RigidbodyHandle *handle,
+    Vec3 *f)
+{
+  Vec3 force = Vec3new(f->x, f->y, f->z);
+  _ev_rigidbody_addforce(*handle, force);
+}
+
+void 
+init_scripting_api()
+{
+  evolmodule_t scripting_module = evol_loadmodule("script");
+  if(!scripting_module) return;
+  IMPORT_NAMESPACE(ScriptInterface, scripting_module);
+
+  ScriptType voidSType = ScriptInterface->getType("void");
+  ScriptType floatSType = ScriptInterface->getType("float");
+  ScriptType ullSType = ScriptInterface->getType("unsigned long long");
+
+  ScriptType rigidbodyHandleSType = ScriptInterface->addType("void*", sizeof(void*));
+  ScriptType rigidbodyComponentSType = ScriptInterface->addStruct("RigidbodyComponent", sizeof(RigidbodyComponent), 1, (ScriptStructMember[]) {
+      {"handle", rigidbodyHandleSType, offsetof(RigidbodyComponent, rbHandle)}
+  });
+
+  ScriptType vec3SType = ScriptInterface->addStruct("Vec3", sizeof(Vec3), 3, (ScriptStructMember[]) {
+      {"x", floatSType, offsetof(Vec3, x)},
+      {"y", floatSType, offsetof(Vec3, y)},
+      {"z", floatSType, offsetof(Vec3, z)}
+  });
+
+  ScriptInterface->addFunction(_ev_rigidbody_addforce_wrapper, "ev_rigidbody_addforce", voidSType, 2, (ScriptType[]){rigidbodyHandleSType, vec3SType});
+  ScriptInterface->addFunction(_ev_rigidbody_getfromentity_wrapper, "ev_rigidbody_getfromentity", rigidbodyHandleSType, 1, (ScriptType[]){ullSType});
+  ScriptInterface->addFunction(_ev_rigidbody_getcomponentfromentity_wrapper, "ev_rigidbody_getcomponentfromentity", rigidbodyComponentSType, 1, (ScriptType[]){ullSType});
+
+  ScriptInterface->loadAPI("subprojects/evmod_physics/script_api.lua");
+
+  evol_unloadmodule(scripting_module);
+  // Invalidating namespace reference as the module is unloaded
+  ScriptInterface = NULL;
 }
