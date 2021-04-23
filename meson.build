@@ -20,7 +20,7 @@ bullet_opt.add_cmake_defines({'BULLET_PHYSICS': true})
 bullet_opt.add_cmake_defines({'CMAKE_BUILD_TYPE': get_option('buildtype')})
 bullet_opt.add_cmake_defines({'USE_MSVC_RUNTIME_LIBRARY_DLL': true})
 bullet_opt.add_cmake_defines({'USE_MSVC_RELEASE_RUNTIME_ALWAYS': false})
-
+bullet_opt.add_cmake_defines({'CMAKE_POSITION_INDEPENDENT_CODE': true})
 
 bullet3_proj = cmake.subproject('bullet3', options: bullet_opt)
 bullet_dynamics_dep = bullet3_proj.dependency('BulletDynamics')
