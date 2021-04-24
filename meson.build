@@ -7,6 +7,9 @@ dst = meson.current_source_dir() + '/import/'
 run_command( 'python3', meson.source_root() + '/subprojects/evol/buildscripts/copy.py', src, dst)
 subdir('import')
 
+cc = meson.get_compiler('c')
+cc_id = cc.get_id()
+
 cmake = import('cmake')
 
 bullet_opt = cmake.subproject_options()
@@ -21,6 +24,9 @@ bullet_opt.add_cmake_defines({'CMAKE_BUILD_TYPE': get_option('buildtype')})
 bullet_opt.add_cmake_defines({'USE_MSVC_RUNTIME_LIBRARY_DLL': true})
 bullet_opt.add_cmake_defines({'USE_MSVC_RELEASE_RUNTIME_ALWAYS': false})
 bullet_opt.add_cmake_defines({'CMAKE_POSITION_INDEPENDENT_CODE': true})
+if cc_id == 'gcc'
+  bullet_opt.add_cmake_defines({'CMAKE_CXX_FLAGS': '-fno-gnu-unique'})
+endif
 
 bullet3_proj = cmake.subproject('bullet3', options: bullet_opt)
 bullet_dynamics_dep = bullet3_proj.dependency('BulletDynamics')
@@ -45,10 +51,16 @@ mod_deps = [
   linear_math_dep,
 ]
 
+mod_cpp_args = []
+if cc_id == 'gcc'
+  mod_cpp_args += ['--no-gnu-unique']
+endif
+
 module = shared_module(
   'evmod_bullet', mod_src,
   include_directories: mod_incdir,
   dependencies: mod_deps,
+  cpp_args: mod_cpp_args,
 )
 
 mod_dep = declare_dependency(
