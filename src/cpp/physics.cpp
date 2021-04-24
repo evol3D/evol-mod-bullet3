@@ -1,10 +1,8 @@
-extern "C" {
 #include <evol/common/ev_types.h>
 #include <evol/common/ev_log.h>
 
 #define TYPE_MODULE evmod_physics
 #include <evol/meta/type_import.h>
-}
 
 #include <physics_api.h>
 

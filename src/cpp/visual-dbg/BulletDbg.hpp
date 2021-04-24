@@ -1,7 +1,6 @@
 #pragma once
 
 #include <btBulletCollisionCommon.h>
-extern "C" {
 
 #include <evol/evol.h>
 
@@ -10,7 +9,6 @@ extern "C" {
 
 #define NAMESPACE_MODULE evmod_glfw
 #include <evol/meta/namespace_import.h>
-}
 
 class BulletDbg: public btIDebugDraw
 {
