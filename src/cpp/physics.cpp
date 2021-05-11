@@ -162,6 +162,10 @@ _ev_rigidbody_new(
     UNIMPLEMENTED();
   }
 
+  if(isDynamic) {
+    body->setActivationState(DISABLE_DEACTIVATION);
+  }
+
   PhysicsData.worldMtx.lock();
   PhysicsData.world->addRigidBody(body);
   PhysicsData.worldMtx.unlock();
