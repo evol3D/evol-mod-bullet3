@@ -113,7 +113,7 @@ _ev_rigidbody_addforce_wrapper(
     RigidbodyHandle *handle,
     Vec3 *f)
 {
-  Vec3 force = Vec3new(f->x, f->y, f->z);
+  Vec3 force = Vec3new(f->x, f->y, f->z); // A new Vec3 is created to ensure alignment
   _ev_rigidbody_addforce(*handle, force);
 }
 
