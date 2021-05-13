@@ -35,7 +35,9 @@ linear_math_dep = bullet3_proj.dependency('LinearMath')
 
 mod_src = [
   'src/mod.c',
+
   'src/cpp/physics.cpp',
+  'src/cpp/EvMotionState.cpp',
 ]
 
 mod_incdir = [
