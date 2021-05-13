@@ -22,6 +22,10 @@ function RigidbodyComponent:addForce(forceVec)
   C('ev_rigidbody_addforce', self.handle, forceVec)
 end
 
+function RigidbodyComponent:setPosition(new_pos)
+  C('ev_rigidbody_setposition', self.handle, new_pos)
+end
+
 ComponentGetters[Rigidbody] = function(entt)
   return RigidbodyComponent:new(C('ev_rigidbody_getcomponentfromentity', entt))
 end

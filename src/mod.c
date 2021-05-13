@@ -117,6 +117,15 @@ _ev_rigidbody_addforce_wrapper(
   _ev_rigidbody_addforce(*handle, force);
 }
 
+void
+_ev_rigidbody_setposition_wrapper(
+    RigidbodyHandle *handle,
+    Vec3 *f)
+{
+  Vec3 force = Vec3new(f->x, f->y, f->z); // A new Vec3 is created to ensure alignment
+  _ev_rigidbody_setposition(*handle, force);
+}
+
 void 
 init_scripting_api()
 {
@@ -142,6 +151,7 @@ init_scripting_api()
   ScriptInterface->addFunction(_ev_rigidbody_addforce_wrapper, "ev_rigidbody_addforce", voidSType, 2, (ScriptType[]){rigidbodyHandleSType, vec3SType});
   ScriptInterface->addFunction(_ev_rigidbody_getfromentity_wrapper, "ev_rigidbody_getfromentity", rigidbodyHandleSType, 1, (ScriptType[]){ullSType});
   ScriptInterface->addFunction(_ev_rigidbody_getcomponentfromentity_wrapper, "ev_rigidbody_getcomponentfromentity", rigidbodyComponentSType, 1, (ScriptType[]){ullSType});
+  ScriptInterface->addFunction(_ev_rigidbody_setposition_wrapper, "ev_rigidbody_setposition", voidSType, 2, (ScriptType[]){rigidbodyHandleSType, vec3SType});
 
   ScriptInterface->loadAPI("subprojects/evmod_physics/script_api.lua");
 
