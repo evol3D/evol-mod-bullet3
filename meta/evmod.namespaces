@@ -9,12 +9,11 @@ EV_NS_DEF_END(Physics)
 
 EV_NS_DEF_BEGIN(Rigidbody)
 
-EV_NS_DEF_FN(RigidbodyHandle, new, (RigidbodyInfo *, rbInfo))
 EV_NS_DEF_FN(void, setPosition, (RigidbodyHandle, rb), (Vec3, pos))
 EV_NS_DEF_FN(Vec3, getPosition, (RigidbodyHandle, rb))
 EV_NS_DEF_FN(void, addForce, (RigidbodyHandle, rb), (Vec3, f))
 
-EV_NS_DEF_FN(void, addToEntity, (U64, entt), (RigidbodyHandle, rb))
+EV_NS_DEF_FN(RigidbodyHandle, addToEntity, (U64, entt), (RigidbodyInfo *, rbInfo))
 EV_NS_DEF_FN(RigidbodyHandle, getFromEntity, (U64, entt))
 
 EV_NS_DEF_END(Rigidbody)

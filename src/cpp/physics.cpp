@@ -13,6 +13,8 @@
 
 #include <mutex>
 
+#include <EvMotionState.h>
+
 #define ev2btVec3(v) btVector3(v.x, v.y, v.z)
 #define bt2evVec3(v) {{  v.x(), v.y(), v.z() }}
 
@@ -143,23 +145,29 @@ _ev_collisionshape_newsphere(
 
 RigidbodyHandle
 _ev_rigidbody_new(
+  U64 entt,
   RigidbodyInfo *rbInfo)
 {
   bool isDynamic = rbInfo->type == EV_RIGIDBODY_DYNAMIC && rbInfo->mass > 0.;
 
   btCollisionShape *collisionShape = reinterpret_cast<btCollisionShape*>(rbInfo->collisionShape);
 
-  btVector3 localInertia(0.0, 0.0, 0.0);
+  btVector3 localInertia;
+
   if(isDynamic) {
-    collisionShape->calculateLocalInertia(1.0, localInertia);
+    collisionShape->calculateLocalInertia(rbInfo->mass, localInertia);
   }
 
-  btRigidBody::btRigidBodyConstructionInfo btRbInfo(rbInfo->mass, new btDefaultMotionState(), collisionShape, localInertia);
+  EvMotionState *motionState = new EvMotionState();
+  motionState->setObjectID(entt);
+  btRigidBody::btRigidBodyConstructionInfo btRbInfo(rbInfo->mass, motionState, collisionShape, localInertia);
+  btRbInfo.m_restitution = rbInfo->restitution;
 
   btRigidBody* body = new btRigidBody(btRbInfo);
-  body->setRestitution(rbInfo->restitution);
+
   if(rbInfo->type == EV_RIGIDBODY_KINEMATIC) {
-    UNIMPLEMENTED();
+    body->setCollisionFlags(btCollisionObject::CF_KINEMATIC_OBJECT);
+    body->setActivationState(DISABLE_DEACTIVATION);
   }
 
   if(isDynamic) {

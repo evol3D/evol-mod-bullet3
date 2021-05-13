@@ -24,6 +24,7 @@ _ev_collisionshape_newsphere(
 
 RigidbodyHandle 
 _ev_rigidbody_new(
+    U64 entt,
     RigidbodyInfo *rbInfo);
 
 void

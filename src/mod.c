@@ -45,15 +45,17 @@ _ev_physics_initecs()
   Data.rigidbodyComponentID = ECS->registerComponent("RigidbodyComponent", sizeof(RigidbodyComponent), EV_ALIGNOF(RigidbodyComponent));
 }
 
-void
+RigidbodyHandle
 _ev_rigidbody_addtoentity(
         ECSEntityID entt,
-        RigidbodyHandle rb)
+        RigidbodyInfo *rbInfo)
 {
     RigidbodyComponent comp = {
-        .rbHandle = rb
+        .rbHandle = _ev_rigidbody_new(entt, rbInfo)
     };
     ECS->addComponent(entt, Data.rigidbodyComponentID, sizeof(RigidbodyComponent), &comp);
+
+    return comp.rbHandle;
 }
 
 RigidbodyHandle
@@ -68,7 +70,12 @@ RigidbodyComponent
 _ev_rigidbody_getcomponentfromentity(
     ECSEntityID entt)
 {
-  return *(RigidbodyComponent*)ECS->getComponent(entt, Data.rigidbodyComponentID);
+  if(ECS->hasComponent(entt, Data.rigidbodyComponentID)) {
+    return *(RigidbodyComponent*)ECS->getComponent(entt, Data.rigidbodyComponentID);
+  }
+  return (RigidbodyComponent) {
+    .rbHandle = NULL
+  };
 }
 
 EV_BINDINGS
@@ -79,7 +86,6 @@ EV_BINDINGS
     EV_NS_BIND_FN(CollisionShape, newBox, _ev_collisionshape_newbox);
     EV_NS_BIND_FN(CollisionShape, newSphere, _ev_collisionshape_newsphere);
 
-    EV_NS_BIND_FN(Rigidbody, new, _ev_rigidbody_new);
     EV_NS_BIND_FN(Rigidbody, setPosition, _ev_rigidbody_setposition);
     EV_NS_BIND_FN(Rigidbody, getPosition, _ev_rigidbody_getposition);
     EV_NS_BIND_FN(Rigidbody, addToEntity, _ev_rigidbody_addtoentity);
