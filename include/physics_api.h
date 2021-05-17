@@ -46,6 +46,10 @@ _ev_rigidbody_addforce(
     RigidbodyHandle rb,
     Vec3 f);
 
+I32
+_ev_physics_enablevisualization(
+    bool enable);
+
 #if defined(__cplusplus)
 }
 #endif

@@ -32,6 +32,7 @@ struct ev_PhysicsData {
   std::mutex worldMtx;
   std::mutex shapeVecMtx;
 
+  bool visualizationEnabled;
 } PhysicsData;
 
 I32 
@@ -43,10 +44,28 @@ _ev_physics_init()
   PhysicsData.constraintSolver = new btSequentialImpulseConstraintSolver();
   PhysicsData.world = new btDiscreteDynamicsWorld(PhysicsData.collisionDispatcher, PhysicsData.broadphase, PhysicsData.constraintSolver, PhysicsData.collisionConfiguration);
 
-  // If visualisation enabled
-  PhysicsData.debugDrawer = new BulletDbg();
-  PhysicsData.world->setDebugDrawer(PhysicsData.debugDrawer);
+  // Collision Callbacks
+  gContactStartedCallback = contactStartedCallback;
+  gContactEndedCallback = contactEndedCallback;
+
   return 0;
+}
+
+I32
+_ev_physics_enablevisualization(
+    bool enable)
+{
+  if(enable) {
+    PhysicsData.debugDrawer = new BulletDbg();
+    PhysicsData.world->setDebugDrawer(PhysicsData.debugDrawer);
+  } else {
+    if(PhysicsData.debugDrawer) {
+      delete PhysicsData.debugDrawer;
+    }
+    PhysicsData.world->setDebugDrawer(NULL);
+  }
+
+  PhysicsData.visualizationEnabled = enable;
 }
 
 void 
@@ -85,7 +104,9 @@ _ev_physics_deinit()
   clearCollisionObjects();
   clearCollisionShapes();
 
-  delete PhysicsData.debugDrawer;
+  if(PhysicsData.visualizationEnabled) {
+    delete PhysicsData.debugDrawer;
+  }
 
   delete PhysicsData.world;
   delete PhysicsData.constraintSolver;
@@ -104,10 +125,7 @@ _ev_physics_update(
 
   PhysicsData.world->stepSimulation(deltaTime, 10);
 
-  // If visualization enabled
-  // This should be a mix of a config var and
-  // a compile time directive.
-  if(!PhysicsData.debugDrawer->windowDestroyed) {
+  if(PhysicsData.visualizationEnabled && PhysicsData.debugDrawer && !PhysicsData.debugDrawer->windowDestroyed) {
     PhysicsData.debugDrawer->startFrame();
     PhysicsData.world->debugDrawWorld();
     PhysicsData.debugDrawer->endFrame();

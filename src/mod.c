@@ -26,7 +26,11 @@ EV_CONSTRUCTOR
   IMPORT_NAMESPACE(ScriptInterface, Data.script_mod);
 
   init_scripting_api();
-  return _ev_physics_init(); 
+  _ev_physics_init();
+
+  _ev_physics_enablevisualization(visualize_physics);
+
+  return 0;
 }
 
 EV_DESTRUCTOR 
