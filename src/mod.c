@@ -59,6 +59,38 @@ _ev_physics_initecs()
   Data.rigidbodyComponentID = ECS->registerComponent("RigidbodyComponent", sizeof(RigidbodyComponent), EV_ALIGNOF(RigidbodyComponent));
 }
 
+void
+_ev_physics_dispatch_collisionenter(
+    U64 enttA,
+    U64 enttB)
+{
+  vec(U64) *enttAList = Script->getCollisionEnterList(enttA);
+  vec(U64) *enttBList = Script->getCollisionEnterList(enttB);
+
+  if(enttAList != NULL) {
+    vec_push(enttAList, &enttB);
+  }
+  if(enttBList != NULL) {
+    vec_push(enttBList, &enttA);
+  }
+}
+
+void
+_ev_physics_dispatch_collisionleave(
+    U64 enttA,
+    U64 enttB)
+{
+  vec(U64) *enttAList = Script->getCollisionLeaveList(enttA);
+  vec(U64) *enttBList = Script->getCollisionLeaveList(enttB);
+
+  if(enttAList != NULL) {
+    vec_push(enttAList, &enttB);
+  }
+  if(enttBList != NULL) {
+    vec_push(enttBList, &enttA);
+  }
+}
+
 RigidbodyHandle
 _ev_rigidbody_addtoentity(
         ECSEntityID entt,

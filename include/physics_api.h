@@ -46,6 +46,16 @@ _ev_rigidbody_addforce(
     RigidbodyHandle rb,
     Vec3 f);
 
+void
+_ev_physics_dispatch_collisionenter(
+    U64 enttA,
+    U64 enttB);
+
+void
+_ev_physics_dispatch_collisionleave(
+    U64 enttA,
+    U64 enttB);
+
 I32
 _ev_physics_enablevisualization(
     bool enable);

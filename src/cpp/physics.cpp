@@ -35,6 +35,13 @@ struct ev_PhysicsData {
   bool visualizationEnabled;
 } PhysicsData;
 
+void 
+contactStartedCallback(
+    btPersistentManifold* const& manifold);
+void 
+contactEndedCallback(
+    btPersistentManifold* const& manifold);
+
 I32 
 _ev_physics_init()
 {
@@ -182,6 +189,7 @@ _ev_rigidbody_new(
   btRbInfo.m_restitution = rbInfo->restitution;
 
   btRigidBody* body = new btRigidBody(btRbInfo);
+  body->setUserPointer(reinterpret_cast<void*>(entt));
 
   if(rbInfo->type == EV_RIGIDBODY_KINEMATIC) {
     body->setCollisionFlags(btCollisionObject::CF_KINEMATIC_OBJECT);
@@ -191,6 +199,8 @@ _ev_rigidbody_new(
   if(isDynamic) {
     body->setActivationState(DISABLE_DEACTIVATION);
   }
+
+  body->setCollisionFlags(body->getCollisionFlags() | btCollisionObject::CF_CUSTOM_MATERIAL_CALLBACK);
 
   PhysicsData.worldMtx.lock();
   PhysicsData.world->addRigidBody(body);
@@ -236,3 +246,26 @@ _ev_rigidbody_addforce(
   btRigidBody* body = reinterpret_cast<btRigidBody *>(rb);
   body->applyCentralForce(ev2btVec3(f));
 }
+
+// ==========================
+// Custom Collision Callbacks
+// ==========================
+
+void 
+contactStartedCallback(
+    btPersistentManifold* const& manifold)
+{
+  _ev_physics_dispatch_collisionenter(
+    reinterpret_cast<U64>(manifold->getBody0()->getUserPointer()),
+    reinterpret_cast<U64>(manifold->getBody1()->getUserPointer()));
+}
+
+void 
+contactEndedCallback(
+    btPersistentManifold* const& manifold)
+{
+  _ev_physics_dispatch_collisionleave(
+    reinterpret_cast<U64>(manifold->getBody0()->getUserPointer()),
+    reinterpret_cast<U64>(manifold->getBody1()->getUserPointer()));
+}
+
