@@ -38,6 +38,7 @@ mod_src = [
 
   'src/cpp/physics.cpp',
   'src/cpp/EvMotionState.cpp',
+  'src/cpp/visual-dbg/BulletDbg.cpp',
 ]
 
 mod_incdir = [
