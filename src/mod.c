@@ -99,7 +99,7 @@ _ev_rigidbody_addtoentity(
     RigidbodyComponent comp = {
         .rbHandle = _ev_rigidbody_new(entt, rbInfo)
     };
-    ECS->addComponent(entt, Data.rigidbodyComponentID, sizeof(RigidbodyComponent), &comp);
+    ECS->setComponent(entt, Data.rigidbodyComponentID, sizeof(RigidbodyComponent), &comp);
 
     return comp.rbHandle;
 }
