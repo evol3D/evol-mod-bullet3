@@ -200,6 +200,17 @@ _ev_rigidbody_getposition(
 }
 
 void
+_ev_rigidbody_setrotationeuler(
+    RigidbodyHandle rb,
+    Vec3 rot)
+{
+  btRigidBody* body = reinterpret_cast<btRigidBody *>(rb);
+  btQuaternion rot_quat;
+  rot_quat.setEuler(rot.y, rot.x, rot.z);
+  body->getWorldTransform().setRotation(rot_quat);
+}
+
+void
 _ev_rigidbody_addforce(
     RigidbodyHandle rb,
     Vec3 f)

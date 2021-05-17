@@ -37,6 +37,11 @@ _ev_rigidbody_getposition(
     RigidbodyHandle rb);
 
 void
+_ev_rigidbody_setrotationeuler(
+    RigidbodyHandle rb,
+    Vec3 rot);
+
+void
 _ev_rigidbody_addforce(
     RigidbodyHandle rb,
     Vec3 f);

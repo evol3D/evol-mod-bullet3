@@ -26,6 +26,10 @@ function RigidbodyComponent:setPosition(new_pos)
   C('ev_rigidbody_setposition', self.handle, new_pos)
 end
 
+function RigidbodyComponent:setRotation(new_rot)
+  C('ev_rigidbody_setrotationeuler', self.handle, new_rot)
+end
+
 ComponentGetters[Rigidbody] = function(entt)
   return RigidbodyComponent:new(C('ev_rigidbody_getcomponentfromentity', entt))
 end
