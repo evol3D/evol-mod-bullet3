@@ -58,7 +58,7 @@ _ev_physics_init()
   return 0;
 }
 
-I32
+void
 _ev_physics_enablevisualization(
     bool enable)
 {

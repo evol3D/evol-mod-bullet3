@@ -34,7 +34,7 @@ BulletDbg::~BulletDbg()
     evol_unloadmodule(game_module);
 }
 
-#define bt2evVec3(v) (Vec3){v.x(), v.y(), v.z()}
+#define bt2evVec3(v) {{v.x(), v.y(), v.z()}}
 
 void 
 BulletDbg::drawLine(
@@ -43,7 +43,7 @@ BulletDbg::drawLine(
     const btVector3& color)
 {
     imGL->setColor3f(1.0, color.y(), color.z());
-    imGL->drawLine((Vec3)bt2evVec3(from), (Vec3)bt2evVec3(to));
+    imGL->drawLine(bt2evVec3(from), bt2evVec3(to));
 }
 
 void 
@@ -103,7 +103,7 @@ BulletDbg::startFrame()
     imGL->setCameraViewMat(viewMat);
     imGL->setCameraProjMat(projectionMat);
 
-    imGL->setClearColor((Vec4){0.0, 0.0, 0.0, 1.0});
+    imGL->setClearColor({{ 0.0, 0.0, 0.0, 1.0 }});
     imGL->clearBuffers();
 }
 

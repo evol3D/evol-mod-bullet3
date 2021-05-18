@@ -56,7 +56,7 @@ _ev_physics_dispatch_collisionleave(
     U64 enttA,
     U64 enttB);
 
-I32
+void
 _ev_physics_enablevisualization(
     bool enable);
 
