@@ -147,6 +147,13 @@ _ev_rigidbody_getfromentity_wrapper(
   *out = _ev_rigidbody_getfromentity(*entt);
 }
 
+void
+_ev_rigidbody_getinvalidhandle_wrapper(
+  RigidbodyHandle *out)
+{
+  *out = NULL;
+}
+
 void _ev_rigidbody_getcomponentfromentity_wrapper(
     RigidbodyComponent *out,
     ECSEntityID *entt)
@@ -203,6 +210,7 @@ init_scripting_api()
 
   ScriptInterface->addFunction(_ev_rigidbody_addforce_wrapper, "ev_rigidbody_addforce", voidSType, 2, (ScriptType[]){rigidbodyHandleSType, vec3SType});
   ScriptInterface->addFunction(_ev_rigidbody_getfromentity_wrapper, "ev_rigidbody_getfromentity", rigidbodyHandleSType, 1, (ScriptType[]){ullSType});
+  ScriptInterface->addFunction(_ev_rigidbody_getinvalidhandle_wrapper, "ev_rigidbody_getinvalidhandle", rigidbodyHandleSType, 0, NULL);
   ScriptInterface->addFunction(_ev_rigidbody_getcomponentfromentity_wrapper, "ev_rigidbody_getcomponentfromentity", rigidbodyComponentSType, 1, (ScriptType[]){ullSType});
   ScriptInterface->addFunction(_ev_rigidbody_setposition_wrapper, "ev_rigidbody_setposition", voidSType, 2, (ScriptType[]){rigidbodyHandleSType, vec3SType});
 

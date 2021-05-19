@@ -2,8 +2,11 @@ Rigidbody = 'RigidbodyComponent'
 
 RigidbodyComponent = {}
 
+RigidbodyInvalidHandle = C('ev_rigidbody_getinvalidhandle')
+
 function RigidbodyComponent:new(comp)
-  new = comp or {}
+  if comp.handle == RigidbodyInvalidHandle then return nil end
+  new = comp
   setmetatable(new, self)
   self.__index = self
 
