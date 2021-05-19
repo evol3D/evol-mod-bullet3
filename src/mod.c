@@ -164,28 +164,25 @@ void _ev_rigidbody_getcomponentfromentity_wrapper(
 void
 _ev_rigidbody_addforce_wrapper(
     RigidbodyHandle *handle,
-    Vec3 *f)
+    __unaligned Vec3 *force)
 {
-  Vec3 force = Vec3new(f->x, f->y, f->z); // A new Vec3 is created to ensure alignment
-  _ev_rigidbody_addforce(*handle, force);
+  _ev_rigidbody_addforce(*handle, *force);
 }
 
 void
 _ev_rigidbody_setposition_wrapper(
     RigidbodyHandle *handle,
-    Vec3 *p)
+    __unaligned Vec3 *pos)
 {
-  Vec3 pos = Vec3new(p->x, p->y, p->z); // A new Vec3 is created to ensure alignment
-  _ev_rigidbody_setposition(*handle, pos);
+  _ev_rigidbody_setposition(*handle, *pos);
 }
 
 void
 _ev_rigidbody_setrotationeuler_wrapper(
     RigidbodyHandle *handle,
-    Vec3 *r)
+    __unaligned Vec3 *rot)
 {
-  Vec3 rot = Vec3new(r->x, r->y, r->z);
-  _ev_rigidbody_setrotationeuler(*handle, rot);
+  _ev_rigidbody_setrotationeuler(*handle, *rot);
 }
 
 void 
