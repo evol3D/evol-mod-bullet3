@@ -141,48 +141,57 @@ EV_BINDINGS
 
 void
 _ev_rigidbody_getfromentity_wrapper(
-    RigidbodyHandle *out, 
-    ECSEntityID *entt)
+    EV_UNALIGNED RigidbodyHandle *out, 
+    EV_UNALIGNED ECSEntityID *entt)
 {
   *out = _ev_rigidbody_getfromentity(*entt);
 }
 
 void
 _ev_rigidbody_getinvalidhandle_wrapper(
-  RigidbodyHandle *out)
+    EV_UNALIGNED RigidbodyHandle *out)
 {
   *out = NULL;
 }
 
 void _ev_rigidbody_getcomponentfromentity_wrapper(
-    RigidbodyComponent *out,
-    ECSEntityID *entt)
+    EV_UNALIGNED RigidbodyComponent *out,
+    EV_UNALIGNED ECSEntityID *entt)
 {
   *out = _ev_rigidbody_getcomponentfromentity(*entt);
 }
 
 void
 _ev_rigidbody_addforce_wrapper(
-    RigidbodyHandle *handle,
-    __unaligned Vec3 *force)
+    EV_UNALIGNED RigidbodyHandle *handle,
+    EV_UNALIGNED Vec3 *force)
 {
-  _ev_rigidbody_addforce(*handle, *force);
+  _ev_rigidbody_addforce(*handle, Vec3new(
+        force->x,
+        force->y,
+        force->z));
 }
 
 void
 _ev_rigidbody_setposition_wrapper(
-    RigidbodyHandle *handle,
-    __unaligned Vec3 *pos)
+    EV_UNALIGNED RigidbodyHandle *handle,
+    EV_UNALIGNED Vec3 *pos)
 {
-  _ev_rigidbody_setposition(*handle, *pos);
+  _ev_rigidbody_setposition(*handle, Vec3new(
+        pos->x,
+        pos->y,
+        pos->z));
 }
 
 void
 _ev_rigidbody_setrotationeuler_wrapper(
-    RigidbodyHandle *handle,
-    __unaligned Vec3 *rot)
+    EV_UNALIGNED RigidbodyHandle *handle,
+    EV_UNALIGNED Vec3 *rot)
 {
-  _ev_rigidbody_setrotationeuler(*handle, *rot);
+  _ev_rigidbody_setrotationeuler(*handle, Vec3new(
+        rot->x,
+        rot->y,
+        rot->z));
 }
 
 void 
