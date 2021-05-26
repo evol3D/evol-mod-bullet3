@@ -1,10 +1,10 @@
-EV_NS_DEF_BEGIN(Physics)
+EV_NS_DEF_BEGIN(PhysicsWorld)
 
-EV_NS_DEF_FN(U32, update, (F32, deltaTime))
-EV_NS_DEF_FN(void, initECS, (,))
+EV_NS_DEF_FN(PhysicsWorldHandle, newWorld, (,))
+EV_NS_DEF_FN(void, destroyWorld, (PhysicsWorldHandle, world))
+EV_NS_DEF_FN(U32, progress, (PhysicsWorldHandle, world), (F32, deltaTime))
 
-EV_NS_DEF_END(Physics)
-
+EV_NS_DEF_END(PhysicsWorld)
 
 
 EV_NS_DEF_BEGIN(Rigidbody)
@@ -13,8 +13,8 @@ EV_NS_DEF_FN(void, setPosition, (RigidbodyHandle, rb), (Vec3, pos))
 EV_NS_DEF_FN(Vec3, getPosition, (RigidbodyHandle, rb))
 EV_NS_DEF_FN(void, addForce, (RigidbodyHandle, rb), (Vec3, f))
 
-EV_NS_DEF_FN(RigidbodyHandle, addToEntity, (U64, entt), (RigidbodyInfo *, rbInfo))
-EV_NS_DEF_FN(RigidbodyHandle, getFromEntity, (U64, entt))
+EV_NS_DEF_FN(RigidbodyHandle, addToEntity, (PhysicsWorldHandle, world_handle), (GenericHandle, entt), (RigidbodyInfo *, rbInfo))
+EV_NS_DEF_FN(RigidbodyHandle, getFromEntity, (GenericHandle, gameWorldHandle), (GenericHandle, entt))
 
 EV_NS_DEF_END(Rigidbody)
 
@@ -22,7 +22,7 @@ EV_NS_DEF_END(Rigidbody)
 
 EV_NS_DEF_BEGIN(CollisionShape)
 
-EV_NS_DEF_FN(CollisionShapeHandle, newBox, (Vec3, half_extents))
-EV_NS_DEF_FN(CollisionShapeHandle, newSphere, (F32, radius))
+EV_NS_DEF_FN(CollisionShapeHandle, newBox, (PhysicsWorldHandle, world), (Vec3, half_extents))
+EV_NS_DEF_FN(CollisionShapeHandle, newSphere, (PhysicsWorldHandle, world), (F32, radius))
 
 EV_NS_DEF_END(CollisionShape)

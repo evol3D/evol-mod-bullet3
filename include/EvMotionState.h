@@ -33,7 +33,8 @@ ATTRIBUTE_ALIGNED16(struct)
 EvMotionState : public btMotionState
 {
 private:
-  ObjectID objectID;
+  GameScene gameScene;
+  GameObject gameObject;
   GameModuleRef mod;
 
 public:
@@ -45,7 +46,11 @@ public:
   void getWorldTransform(btTransform & centerOfMassWorldTrans) const override;
   void setWorldTransform(const btTransform & centerOfMassWorldTrans) override;
 
-  inline void setObjectID(U64 id) {
-    objectID = static_cast<ObjectID>(id);
+  inline void setGameObject(GameObject id) {
+    gameObject = id;
   };
+
+  inline void setGameScene(GameScene gameSceneHandle) {
+    gameScene = gameSceneHandle;
+  }
 };

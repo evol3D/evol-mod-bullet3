@@ -1,15 +1,20 @@
 TYPE(CollisionShapeHandle, PTR)
 TYPE(RigidbodyHandle, PTR)
 
-TYPE( RigidbodyType, enum {
+TYPE(PhysicsWorldHandle, GenericHandle)
+
+TYPE(RigidbodyType, enum {
   EV_RIGIDBODY_DYNAMIC,
   EV_RIGIDBODY_KINEMATIC,
   EV_RIGIDBODY_STATIC
 })
 
-TYPE( RigidbodyInfo, struct {
+TYPE(RigidbodyInfo, struct {
   RigidbodyType type;
   CollisionShapeHandle collisionShape;
   F32 mass;
   F32 restitution;
+
+  GenericHandle gameScene;
+  GenericHandle ecs_world;
 })

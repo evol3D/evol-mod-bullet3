@@ -7,27 +7,46 @@
 #include <evol/meta/module_import.h>
 #define IMPORT_MODULE evmod_script
 #include <evol/meta/module_import.h>
+#define IMPORT_MODULE evmod_game
+#include <evol/meta/module_import.h>
 
 struct {
   evolmodule_t ecs_mod;
   evolmodule_t script_mod;
-  ECSEntityID rigidbodyComponentID;
+  evolmodule_t game_mod;
+  GameComponentID rigidbodyComponentID;
 } Data;
 
 void 
 init_scripting_api();
 
+// ECS stuff
+typedef struct {
+    RigidbodyHandle rbHandle;
+} RigidbodyComponent;
+
 EV_CONSTRUCTOR 
 { 
-  Data.ecs_mod = NULL;
+  Data.ecs_mod = evol_loadmodule("ecs");
+  if(Data.ecs_mod) {
+    imports(Data.ecs_mod, (GameECS));
+    if(GameECS) {
+      Data.rigidbodyComponentID = GameECS->registerComponent("RigidbodyComponent", sizeof(RigidbodyComponent), EV_ALIGNOF(RigidbodyComponent));
+    }
+  }
+
   Data.script_mod = evol_loadmodule("script");
+  if(Data.script_mod) {
+    imports(Data.script_mod, (Script, ScriptInterface));
+    init_scripting_api();
+  }
 
-  IMPORT_NAMESPACE(Script, Data.script_mod);
-  IMPORT_NAMESPACE(ScriptInterface, Data.script_mod);
+  Data.game_mod = evol_loadmodule("game");
+  if(Data.game_mod) {
+    imports(Data.game_mod, (Object));
+  }
 
-  init_scripting_api();
   _ev_physics_init();
-
   _ev_physics_enablevisualization(visualize_physics);
 
   return 0;
@@ -41,31 +60,21 @@ EV_DESTRUCTOR
   if(Data.script_mod != NULL) {
     evol_unloadmodule(Data.script_mod);
   }
+  if(Data.game_mod != NULL) {
+    evol_unloadmodule(Data.game_mod);
+  }
 
   return _ev_physics_deinit(); 
 } 
 
-// ECS stuff
-typedef struct {
-    RigidbodyHandle rbHandle;
-} RigidbodyComponent;
-
-void
-_ev_physics_initecs()
-{
-  Data.ecs_mod = evol_loadmodule("ecs");
-  IMPORT_NAMESPACE(ECS, Data.ecs_mod);
-
-  Data.rigidbodyComponentID = ECS->registerComponent("RigidbodyComponent", sizeof(RigidbodyComponent), EV_ALIGNOF(RigidbodyComponent));
-}
-
 void
 _ev_physics_dispatch_collisionenter(
+    ECSGameWorldHandle world_handle,
     U64 enttA,
     U64 enttB)
 {
-  vec(U64) *enttAList = Script->getCollisionEnterList(enttA);
-  vec(U64) *enttBList = Script->getCollisionEnterList(enttB);
+  vec(U64) *enttAList = Script->getCollisionEnterList(world_handle, enttA);
+  vec(U64) *enttBList = Script->getCollisionEnterList(world_handle, enttB);
 
   if(enttAList != NULL) {
     vec_push(enttAList, &enttB);
@@ -77,11 +86,12 @@ _ev_physics_dispatch_collisionenter(
 
 void
 _ev_physics_dispatch_collisionleave(
+    ECSGameWorldHandle world_handle,
     U64 enttA,
     U64 enttB)
 {
-  vec(U64) *enttAList = Script->getCollisionLeaveList(enttA);
-  vec(U64) *enttBList = Script->getCollisionLeaveList(enttB);
+  vec(U64) *enttAList = Script->getCollisionLeaveList(world_handle, enttA);
+  vec(U64) *enttBList = Script->getCollisionLeaveList(world_handle, enttB);
 
   if(enttAList != NULL) {
     vec_push(enttAList, &enttB);
@@ -93,31 +103,34 @@ _ev_physics_dispatch_collisionleave(
 
 RigidbodyHandle
 _ev_rigidbody_addtoentity(
-        ECSEntityID entt,
-        RigidbodyInfo *rbInfo)
+    PhysicsWorldHandle world,
+    GameEntityID entt,
+    RigidbodyInfo *rbInfo)
 {
     RigidbodyComponent comp = {
-        .rbHandle = _ev_rigidbody_new(entt, rbInfo)
+        .rbHandle = _ev_rigidbody_new(world, entt, rbInfo)
     };
-    ECS->setComponent(entt, Data.rigidbodyComponentID, sizeof(RigidbodyComponent), &comp);
+    GameECS->setComponent(rbInfo->ecs_world, entt, Data.rigidbodyComponentID, &comp);
 
     return comp.rbHandle;
 }
 
 RigidbodyHandle
 _ev_rigidbody_getfromentity(
-        ECSEntityID entt)
+    GameScene scene,
+    GameEntityID entt)
 {
-    RigidbodyComponent *rbComp = ECS->getComponent(entt, Data.rigidbodyComponentID);
-    return rbComp->rbHandle;
+  RigidbodyComponent *rbComp = Object->getComponent(scene, entt, Data.rigidbodyComponentID);
+  return rbComp->rbHandle;
 }
 
 RigidbodyComponent
 _ev_rigidbody_getcomponentfromentity(
+    GameScene scene,
     ECSEntityID entt)
 {
-  if(ECS->hasComponent(entt, Data.rigidbodyComponentID)) {
-    return *(RigidbodyComponent*)ECS->getComponent(entt, Data.rigidbodyComponentID);
+  if(Object->hasComponent(scene, entt, Data.rigidbodyComponentID)) {
+    return *(RigidbodyComponent*)Object->getComponent(scene, entt, Data.rigidbodyComponentID);
   }
   return (RigidbodyComponent) {
     .rbHandle = NULL
@@ -126,8 +139,9 @@ _ev_rigidbody_getcomponentfromentity(
 
 EV_BINDINGS
 {
-    EV_NS_BIND_FN(Physics, update, _ev_physics_update);
-    EV_NS_BIND_FN(Physics, initECS, _ev_physics_initecs);
+    EV_NS_BIND_FN(PhysicsWorld, newWorld    , ev_physicsworld_newworld);
+    EV_NS_BIND_FN(PhysicsWorld, destroyWorld, ev_physicsworld_destroyworld);
+    EV_NS_BIND_FN(PhysicsWorld, progress    , ev_physicsworld_progress);
 
     EV_NS_BIND_FN(CollisionShape, newBox, _ev_collisionshape_newbox);
     EV_NS_BIND_FN(CollisionShape, newSphere, _ev_collisionshape_newsphere);
@@ -144,7 +158,7 @@ _ev_rigidbody_getfromentity_wrapper(
     EV_UNALIGNED RigidbodyHandle *out, 
     EV_UNALIGNED ECSEntityID *entt)
 {
-  *out = _ev_rigidbody_getfromentity(*entt);
+  *out = _ev_rigidbody_getfromentity(NULL, *entt);
 }
 
 void
@@ -158,7 +172,7 @@ void _ev_rigidbody_getcomponentfromentity_wrapper(
     EV_UNALIGNED RigidbodyComponent *out,
     EV_UNALIGNED ECSEntityID *entt)
 {
-  *out = _ev_rigidbody_getcomponentfromentity(*entt);
+  *out = _ev_rigidbody_getcomponentfromentity(NULL, *entt);
 }
 
 void

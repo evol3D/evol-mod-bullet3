@@ -17,10 +17,8 @@ BulletDbg::BulletDbg()
     game_module = evol_loadmodule("game");
     DEBUG_ASSERT(window_module);
     DEBUG_ASSERT(game_module);
-    IMPORT_NAMESPACE(Window, window_module);
-    IMPORT_NAMESPACE(DbgWindow, window_module);
-    IMPORT_NAMESPACE(imGL, window_module);
-    IMPORT_NAMESPACE(Camera, game_module);
+    imports(window_module, (Window, DbgWindow, imGL));
+    imports(game_module, (Camera, Scene));
 
     dbgWindow = DbgWindow->create(800, 600, "Physics Debug");
 
@@ -92,12 +90,12 @@ BulletDbg::startFrame()
     Window->getSize(dbgWindow, &width, &height);
     DbgWindow->startFrame(dbgWindow);
 
-    ObjectID activeCamera = Camera->getActive();
+    GameObject activeCamera = Scene->getActiveCamera(NULL);
 
     Matrix4x4 projectionMat;
     Matrix4x4 viewMat;
-    Camera->getViewMat(activeCamera, viewMat);
-    Camera->getProjectionMat(activeCamera, projectionMat);
+    Camera->getViewMat(NULL, activeCamera, viewMat);
+    Camera->getProjectionMat(NULL, activeCamera, projectionMat);
 
     imGL->setViewport(0, 0, width, height);
     imGL->setCameraViewMat(viewMat);

@@ -18,7 +18,7 @@ EvMotionState::EvMotionState(
 
 void EvMotionState::getWorldTransform(btTransform & centerOfMassWorldTrans) const
 {
-  const Matrix4x4 *objectTransform = Object->getWorldTransform(objectID);
+  const Matrix4x4 *objectTransform = Object->getWorldTransform(gameScene, gameObject);
   centerOfMassWorldTrans.setFromOpenGLMatrix(reinterpret_cast<const btScalar*>(*objectTransform));
 }
 
@@ -27,6 +27,6 @@ void EvMotionState::setWorldTransform(const btTransform & centerOfMassWorldTrans
   const btVector3& pos = centerOfMassWorldTrans.getOrigin();
   btQuaternion rot = centerOfMassWorldTrans.getRotation();
 
-  Object->setPosition(objectID, bt2evVec3(pos));
-  Object->setRotation(objectID, bt2evQuat(rot));
+  Object->setPosition(gameScene, gameObject, bt2evVec3(pos));
+  Object->setRotation(gameScene, gameObject, bt2evQuat(rot));
 }

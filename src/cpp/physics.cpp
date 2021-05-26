@@ -15,22 +15,48 @@
 
 #include <EvMotionState.h>
 
+#include <vector>
+
 #define ev2btVec3(v) btVector3(v.x, v.y, v.z)
 #define bt2evVec3(v) {{  v.x(), v.y(), v.z() }}
 
-struct ev_PhysicsData {
-  public:
+struct RigidbodyData {
+  GenericHandle entt_id;
+  GenericHandle game_scene;
+  GenericHandle ecs_world;
+};
+
+struct PhysicsWorld {
   btCollisionConfiguration *collisionConfiguration;
   btCollisionDispatcher *collisionDispatcher;
   btBroadphaseInterface *broadphase;
   btSequentialImpulseConstraintSolver *constraintSolver;
   btDynamicsWorld *world;
-  BulletDbg *debugDrawer;
 
   btAlignedObjectArray<btCollisionShape*> collisionShapes;
 
   std::mutex worldMtx;
   std::mutex shapeVecMtx;
+
+  PhysicsWorld(const PhysicsWorld& old) 
+  {
+    collisionConfiguration = old.collisionConfiguration;
+    collisionDispatcher = old.collisionDispatcher;
+    broadphase = old.broadphase;
+    constraintSolver = old.constraintSolver;
+    world = old.world;
+
+    collisionShapes = old.collisionShapes;
+  }
+
+  PhysicsWorld() = default;
+};
+
+
+struct ev_PhysicsData {
+  std::vector<PhysicsWorld> worlds;
+
+  BulletDbg *debugDrawer;
 
   bool visualizationEnabled;
 } PhysicsData;
@@ -42,15 +68,92 @@ void
 contactEndedCallback(
     btPersistentManifold* const& manifold);
 
-I32 
+PhysicsWorldHandle
+ev_physicsworld_newworld()
+{
+  PhysicsWorld newWorld;
+  newWorld.collisionConfiguration = new btDefaultCollisionConfiguration();
+  newWorld.collisionDispatcher = new btCollisionDispatcher(newWorld.collisionConfiguration);
+  newWorld.broadphase = new btDbvtBroadphase();
+  newWorld.constraintSolver = new btSequentialImpulseConstraintSolver();
+  newWorld.world = new btDiscreteDynamicsWorld(newWorld.collisionDispatcher, newWorld.broadphase, newWorld.constraintSolver, newWorld.collisionConfiguration);
+
+  if(PhysicsData.visualizationEnabled) {
+    newWorld.world->setDebugDrawer(PhysicsData.debugDrawer);
+  }
+
+  PhysicsData.worlds.push_back(newWorld);
+
+  return (PhysicsWorldHandle) (PhysicsData.worlds.size() - 1);
+}
+
+void
+ev_physicsworld_destroyworld(
+    PhysicsWorldHandle world_handle)
+{
+  PhysicsWorld &physWorld = PhysicsData.worlds[world_handle];
+  std::lock_guard<std::mutex> guard(physWorld.worldMtx);
+
+  // Clear collision objects
+  auto collisionObjects = physWorld.world->getCollisionObjectArray();
+  for(int i = collisionObjects.size()-1; i >=0; --i) {
+    auto object = collisionObjects[i];
+    auto rb = btRigidBody::upcast(object);
+
+    if(rb != nullptr) {
+      delete rb->getMotionState();
+      delete reinterpret_cast<RigidbodyData*>(rb->getUserPointer());
+    }
+
+
+    physWorld.world->removeCollisionObject(object);
+    delete object;
+  }
+
+  // Clear collision shapes  
+  std::lock_guard<std::mutex> shapeGuard(physWorld.shapeVecMtx);
+
+  for(int i = 0; i < physWorld.collisionShapes.size(); ++i) {
+    delete physWorld.collisionShapes[i];
+    physWorld.collisionShapes[i] = nullptr;
+  }
+
+  delete physWorld.world;
+  delete physWorld.constraintSolver;
+  delete physWorld.broadphase;
+  delete physWorld.collisionDispatcher;
+  delete physWorld.collisionConfiguration;
+  physWorld.world = nullptr;
+  physWorld.constraintSolver = nullptr;
+  physWorld.broadphase = nullptr;
+  physWorld.collisionDispatcher = nullptr;
+  physWorld.collisionConfiguration = nullptr;
+}
+
+U32
+ev_physicsworld_progress(
+    PhysicsWorldHandle world_handle,
+    F32 deltaTime)
+{
+  PhysicsWorld &physWorld = PhysicsData.worlds[world_handle];
+  /* ev_log_trace("Progressing PhysicsWorld { %llu } with delta time { %f }", world_handle, deltaTime); */
+  std::lock_guard<std::mutex> guard(physWorld.worldMtx);
+
+  physWorld.world->stepSimulation(deltaTime, 10);
+
+  if(PhysicsData.visualizationEnabled && PhysicsData.debugDrawer && !PhysicsData.debugDrawer->windowDestroyed) {
+    /* ev_log_trace("Visualization enabled. Drawing frame from PhysicsWorld { %llu }", world_handle); */
+    PhysicsData.debugDrawer->startFrame();
+    physWorld.world->debugDrawWorld();
+    PhysicsData.debugDrawer->endFrame();
+  }
+
+  return 0;
+}
+
+I32
 _ev_physics_init()
 {
-  PhysicsData.collisionConfiguration = new btDefaultCollisionConfiguration();
-  PhysicsData.collisionDispatcher = new btCollisionDispatcher(PhysicsData.collisionConfiguration);
-  PhysicsData.broadphase = new btDbvtBroadphase();
-  PhysicsData.constraintSolver = new btSequentialImpulseConstraintSolver();
-  PhysicsData.world = new btDiscreteDynamicsWorld(PhysicsData.collisionDispatcher, PhysicsData.broadphase, PhysicsData.constraintSolver, PhysicsData.collisionConfiguration);
-
   // Collision Callbacks
   gContactStartedCallback = contactStartedCallback;
   gContactEndedCallback = contactEndedCallback;
@@ -64,115 +167,68 @@ _ev_physics_enablevisualization(
 {
   if(enable) {
     PhysicsData.debugDrawer = new BulletDbg();
-    PhysicsData.world->setDebugDrawer(PhysicsData.debugDrawer);
+    for(auto &physWorld : PhysicsData.worlds) {
+      physWorld.world->setDebugDrawer(PhysicsData.debugDrawer);
+    }
   } else {
     if(PhysicsData.debugDrawer) {
       delete PhysicsData.debugDrawer;
     }
-    PhysicsData.world->setDebugDrawer(NULL);
+    for(auto &physWorld : PhysicsData.worlds) {
+      physWorld.world->setDebugDrawer(nullptr);
+    }
   }
 
   PhysicsData.visualizationEnabled = enable;
 }
 
-void 
-clearCollisionObjects()
-{
-  auto collisionObjects = PhysicsData.world->getCollisionObjectArray();
-  for(int i = collisionObjects.size()-1; i >=0; --i) {
-    auto object = collisionObjects[i];
-    auto rb = btRigidBody::upcast(object);
-
-    if(rb != nullptr) {
-      delete rb->getMotionState();
-    }
-
-    PhysicsData.world->removeCollisionObject(object);
-    delete object;
-  }
-}
-
-void 
-clearCollisionShapes()
-{
-  std::lock_guard<std::mutex> shapeGuard(PhysicsData.shapeVecMtx);
-
-  for(int i = 0; i < PhysicsData.collisionShapes.size(); ++i) {
-    delete PhysicsData.collisionShapes[i];
-    PhysicsData.collisionShapes[i] = 0;
-  }
-}
-
 I32 
 _ev_physics_deinit()
 {
-  std::lock_guard<std::mutex> guard(PhysicsData.worldMtx);
-
-  clearCollisionObjects();
-  clearCollisionShapes();
-
   if(PhysicsData.visualizationEnabled) {
     delete PhysicsData.debugDrawer;
   }
 
-  delete PhysicsData.world;
-  delete PhysicsData.constraintSolver;
-  delete PhysicsData.broadphase;
-  delete PhysicsData.collisionDispatcher;
-  delete PhysicsData.collisionConfiguration;
-
   return 0;
 }
 
-U32 
-_ev_physics_update(
-  F32 deltaTime)
-{
-  std::lock_guard<std::mutex> guard(PhysicsData.worldMtx);
-
-  PhysicsData.world->stepSimulation(deltaTime, 10);
-
-  if(PhysicsData.visualizationEnabled && PhysicsData.debugDrawer && !PhysicsData.debugDrawer->windowDestroyed) {
-    PhysicsData.debugDrawer->startFrame();
-    PhysicsData.world->debugDrawWorld();
-    PhysicsData.debugDrawer->endFrame();
-  }
-
-  return 0;
-}
-
-#define STORE_COLLISION_SHAPE(x) do { \
-    std::lock_guard<std::mutex> shapeGuard(PhysicsData.shapeVecMtx); \
-    PhysicsData.collisionShapes.push_back(x); \
+#define STORE_COLLISION_SHAPE(pw, x) do { \
+    PhysicsWorld &physWorld = PhysicsData.worlds[pw]; \
+    std::lock_guard<std::mutex> shapeGuard(physWorld.shapeVecMtx); \
+    physWorld.collisionShapes.push_back(x); \
   } while (0)
 
 CollisionShapeHandle
 _ev_collisionshape_newbox(
+  PhysicsWorldHandle world_handle,
   Vec3 half_extents)
 {
   btCollisionShape* box = new btBoxShape(ev2btVec3(half_extents));
 
-  STORE_COLLISION_SHAPE(box);
+  STORE_COLLISION_SHAPE(world_handle, box);
 
   return box;
 }
 
 CollisionShapeHandle
 _ev_collisionshape_newsphere(
+  PhysicsWorldHandle world_handle,
   F32 radius)
 {
   btCollisionShape *sphere = new btSphereShape(radius);
 
-  STORE_COLLISION_SHAPE(sphere);
+  STORE_COLLISION_SHAPE(world_handle, sphere);
 
   return sphere;
 }
 
 RigidbodyHandle
 _ev_rigidbody_new(
+  PhysicsWorldHandle world_handle,
   U64 entt,
   RigidbodyInfo *rbInfo)
 {
+  PhysicsWorld &physWorld = PhysicsData.worlds[world_handle];
   bool isDynamic = rbInfo->type == EV_RIGIDBODY_DYNAMIC && rbInfo->mass > 0.;
 
   btCollisionShape *collisionShape = reinterpret_cast<btCollisionShape*>(rbInfo->collisionShape);
@@ -184,12 +240,17 @@ _ev_rigidbody_new(
   }
 
   EvMotionState *motionState = new EvMotionState();
-  motionState->setObjectID(entt);
+  motionState->setGameObject(entt);
+  motionState->setGameScene(rbInfo->gameScene);
   btRigidBody::btRigidBodyConstructionInfo btRbInfo(rbInfo->mass, motionState, collisionShape, localInertia);
   btRbInfo.m_restitution = rbInfo->restitution;
 
   btRigidBody* body = new btRigidBody(btRbInfo);
-  body->setUserPointer(reinterpret_cast<void*>(entt));
+  RigidbodyData *rbData = new RigidbodyData;
+  rbData->entt_id = entt;
+  rbData->game_scene = rbInfo->gameScene;
+  rbData->ecs_world = rbInfo->ecs_world;
+  body->setUserPointer(rbData);
 
   if(rbInfo->type == EV_RIGIDBODY_KINEMATIC) {
     body->setCollisionFlags(btCollisionObject::CF_KINEMATIC_OBJECT);
@@ -202,9 +263,11 @@ _ev_rigidbody_new(
 
   body->setCollisionFlags(body->getCollisionFlags() | btCollisionObject::CF_CUSTOM_MATERIAL_CALLBACK);
 
-  PhysicsData.worldMtx.lock();
-  PhysicsData.world->addRigidBody(body);
-  PhysicsData.worldMtx.unlock();
+  physWorld.worldMtx.lock();
+  physWorld.world->addRigidBody(body);
+  physWorld.worldMtx.unlock();
+
+  ev_log_trace("New rigidbody added to PhysicsWorld { %llu }. Current rigidbody count in that world = %llu", world_handle, physWorld.world->getNumCollisionObjects());
 
   return body;
 }
@@ -255,17 +318,23 @@ void
 contactStartedCallback(
     btPersistentManifold* const& manifold)
 {
+  RigidbodyData *rbData0 = reinterpret_cast<RigidbodyData*>(manifold->getBody0()->getUserPointer());
+  RigidbodyData *rbData1 = reinterpret_cast<RigidbodyData*>(manifold->getBody1()->getUserPointer());
   _ev_physics_dispatch_collisionenter(
-    reinterpret_cast<U64>(manifold->getBody0()->getUserPointer()),
-    reinterpret_cast<U64>(manifold->getBody1()->getUserPointer()));
+    rbData0->ecs_world,
+    static_cast<U64>(rbData0->entt_id),
+    static_cast<U64>(rbData1->entt_id));
 }
 
 void 
 contactEndedCallback(
     btPersistentManifold* const& manifold)
 {
+  RigidbodyData *rbData0 = reinterpret_cast<RigidbodyData*>(manifold->getBody0()->getUserPointer());
+  RigidbodyData *rbData1 = reinterpret_cast<RigidbodyData*>(manifold->getBody1()->getUserPointer());
   _ev_physics_dispatch_collisionleave(
-    reinterpret_cast<U64>(manifold->getBody0()->getUserPointer()),
-    reinterpret_cast<U64>(manifold->getBody1()->getUserPointer()));
+    rbData0->ecs_world,
+    static_cast<U64>(rbData0->entt_id),
+    static_cast<U64>(rbData1->entt_id));
 }
 

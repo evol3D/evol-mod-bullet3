@@ -16,14 +16,17 @@ _ev_physics_update(
 
 CollisionShapeHandle 
 _ev_collisionshape_newbox(
+    PhysicsWorldHandle world_handle,
     Vec3 half_extents);
 
 CollisionShapeHandle 
 _ev_collisionshape_newsphere(
+    PhysicsWorldHandle world_handle,
     F32 radius);
 
 RigidbodyHandle 
 _ev_rigidbody_new(
+    PhysicsWorldHandle world_handle,
     U64 entt,
     RigidbodyInfo *rbInfo);
 
@@ -48,17 +51,31 @@ _ev_rigidbody_addforce(
 
 void
 _ev_physics_dispatch_collisionenter(
+    U64 world_handle,
     U64 enttA,
     U64 enttB);
 
 void
 _ev_physics_dispatch_collisionleave(
+    U64 world_handle,
     U64 enttA,
     U64 enttB);
 
 void
 _ev_physics_enablevisualization(
     bool enable);
+
+PhysicsWorldHandle
+ev_physicsworld_newworld();
+
+void
+ev_physicsworld_destroyworld(
+    PhysicsWorldHandle world_handle);
+
+U32
+ev_physicsworld_progress(
+    PhysicsWorldHandle world_handle,
+    F32 deltaTime);
 
 #if defined(__cplusplus)
 }
