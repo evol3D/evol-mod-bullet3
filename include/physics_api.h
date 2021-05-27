@@ -26,7 +26,7 @@ _ev_collisionshape_newsphere(
 
 RigidbodyHandle 
 _ev_rigidbody_new(
-    PhysicsWorldHandle world_handle,
+    GenericHandle game_scene,
     U64 entt,
     RigidbodyInfo *rbInfo);
 
@@ -51,13 +51,13 @@ _ev_rigidbody_addforce(
 
 void
 _ev_physics_dispatch_collisionenter(
-    U64 world_handle,
+    U64 game_scene,
     U64 enttA,
     U64 enttB);
 
 void
 _ev_physics_dispatch_collisionleave(
-    U64 world_handle,
+    U64 game_scene,
     U64 enttA,
     U64 enttB);
 

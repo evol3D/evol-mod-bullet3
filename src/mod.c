@@ -69,12 +69,12 @@ EV_DESTRUCTOR
 
 void
 _ev_physics_dispatch_collisionenter(
-    ECSGameWorldHandle world_handle,
+    GameScene scene,
     U64 enttA,
     U64 enttB)
 {
-  vec(U64) *enttAList = Script->getCollisionEnterList(world_handle, enttA);
-  vec(U64) *enttBList = Script->getCollisionEnterList(world_handle, enttB);
+  vec(U64) *enttAList = Script->getCollisionEnterList(scene, enttA);
+  vec(U64) *enttBList = Script->getCollisionEnterList(scene, enttB);
 
   if(enttAList != NULL) {
     vec_push(enttAList, &enttB);
@@ -86,12 +86,12 @@ _ev_physics_dispatch_collisionenter(
 
 void
 _ev_physics_dispatch_collisionleave(
-    ECSGameWorldHandle world_handle,
+    GameScene scene,
     U64 enttA,
     U64 enttB)
 {
-  vec(U64) *enttAList = Script->getCollisionLeaveList(world_handle, enttA);
-  vec(U64) *enttBList = Script->getCollisionLeaveList(world_handle, enttB);
+  vec(U64) *enttAList = Script->getCollisionLeaveList(scene, enttA);
+  vec(U64) *enttBList = Script->getCollisionLeaveList(scene, enttB);
 
   if(enttAList != NULL) {
     vec_push(enttAList, &enttB);
@@ -103,14 +103,14 @@ _ev_physics_dispatch_collisionleave(
 
 RigidbodyHandle
 _ev_rigidbody_addtoentity(
-    PhysicsWorldHandle world,
+    GameScene game_scene,
     GameEntityID entt,
     RigidbodyInfo *rbInfo)
 {
     RigidbodyComponent comp = {
-        .rbHandle = _ev_rigidbody_new(world, entt, rbInfo)
+        .rbHandle = _ev_rigidbody_new(game_scene, entt, rbInfo)
     };
-    GameECS->setComponent(rbInfo->ecs_world, entt, Data.rigidbodyComponentID, &comp);
+    Object->setComponent(game_scene, entt, Data.rigidbodyComponentID, &comp);
 
     return comp.rbHandle;
 }

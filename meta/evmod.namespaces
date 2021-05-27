@@ -13,7 +13,7 @@ EV_NS_DEF_FN(void, setPosition, (RigidbodyHandle, rb), (Vec3, pos))
 EV_NS_DEF_FN(Vec3, getPosition, (RigidbodyHandle, rb))
 EV_NS_DEF_FN(void, addForce, (RigidbodyHandle, rb), (Vec3, f))
 
-EV_NS_DEF_FN(RigidbodyHandle, addToEntity, (PhysicsWorldHandle, world_handle), (GenericHandle, entt), (RigidbodyInfo *, rbInfo))
+EV_NS_DEF_FN(RigidbodyHandle, addToEntity, (GenericHandle, game_scene), (GenericHandle, entt), (RigidbodyInfo *, rbInfo))
 EV_NS_DEF_FN(RigidbodyHandle, getFromEntity, (GenericHandle, gameWorldHandle), (GenericHandle, entt))
 
 EV_NS_DEF_END(Rigidbody)

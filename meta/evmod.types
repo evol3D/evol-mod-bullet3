@@ -14,7 +14,4 @@ TYPE(RigidbodyInfo, struct {
   CollisionShapeHandle collisionShape;
   F32 mass;
   F32 restitution;
-
-  GenericHandle gameScene;
-  GenericHandle ecs_world;
 })

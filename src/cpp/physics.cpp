@@ -23,7 +23,6 @@
 struct RigidbodyData {
   GenericHandle entt_id;
   GenericHandle game_scene;
-  GenericHandle ecs_world;
 };
 
 struct PhysicsWorld {
@@ -57,6 +56,8 @@ struct ev_PhysicsData {
   std::vector<PhysicsWorld> worlds;
 
   BulletDbg *debugDrawer;
+
+  evolmodule_t game_mod;
 
   bool visualizationEnabled;
 } PhysicsData;
@@ -158,6 +159,11 @@ _ev_physics_init()
   gContactStartedCallback = contactStartedCallback;
   gContactEndedCallback = contactEndedCallback;
 
+  PhysicsData.game_mod = evol_loadmodule("game");
+  if(PhysicsData.game_mod) {
+    imports(PhysicsData.game_mod, (Scene));
+  }
+
   return 0;
 }
 
@@ -187,6 +193,10 @@ _ev_physics_deinit()
 {
   if(PhysicsData.visualizationEnabled) {
     delete PhysicsData.debugDrawer;
+  }
+
+  if(PhysicsData.game_mod) {
+    evol_unloadmodule(PhysicsData.game_mod);
   }
 
   return 0;
@@ -224,10 +234,11 @@ _ev_collisionshape_newsphere(
 
 RigidbodyHandle
 _ev_rigidbody_new(
-  PhysicsWorldHandle world_handle,
+  GameScene game_scene,
   U64 entt,
   RigidbodyInfo *rbInfo)
 {
+  PhysicsWorldHandle world_handle = Scene->getPhysicsWorld(game_scene);
   PhysicsWorld &physWorld = PhysicsData.worlds[world_handle];
   bool isDynamic = rbInfo->type == EV_RIGIDBODY_DYNAMIC && rbInfo->mass > 0.;
 
@@ -241,15 +252,14 @@ _ev_rigidbody_new(
 
   EvMotionState *motionState = new EvMotionState();
   motionState->setGameObject(entt);
-  motionState->setGameScene(rbInfo->gameScene);
+  motionState->setGameScene(game_scene);
   btRigidBody::btRigidBodyConstructionInfo btRbInfo(rbInfo->mass, motionState, collisionShape, localInertia);
   btRbInfo.m_restitution = rbInfo->restitution;
 
   btRigidBody* body = new btRigidBody(btRbInfo);
   RigidbodyData *rbData = new RigidbodyData;
   rbData->entt_id = entt;
-  rbData->game_scene = rbInfo->gameScene;
-  rbData->ecs_world = rbInfo->ecs_world;
+  rbData->game_scene = game_scene;
   body->setUserPointer(rbData);
 
   if(rbInfo->type == EV_RIGIDBODY_KINEMATIC) {
@@ -321,7 +331,7 @@ contactStartedCallback(
   RigidbodyData *rbData0 = reinterpret_cast<RigidbodyData*>(manifold->getBody0()->getUserPointer());
   RigidbodyData *rbData1 = reinterpret_cast<RigidbodyData*>(manifold->getBody1()->getUserPointer());
   _ev_physics_dispatch_collisionenter(
-    rbData0->ecs_world,
+    rbData0->game_scene,
     static_cast<U64>(rbData0->entt_id),
     static_cast<U64>(rbData1->entt_id));
 }
@@ -333,7 +343,7 @@ contactEndedCallback(
   RigidbodyData *rbData0 = reinterpret_cast<RigidbodyData*>(manifold->getBody0()->getUserPointer());
   RigidbodyData *rbData1 = reinterpret_cast<RigidbodyData*>(manifold->getBody1()->getUserPointer());
   _ev_physics_dispatch_collisionleave(
-    rbData0->ecs_world,
+    rbData0->game_scene,
     static_cast<U64>(rbData0->entt_id),
     static_cast<U64>(rbData1->entt_id));
 }
