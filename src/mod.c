@@ -18,7 +18,8 @@ struct {
 } Data;
 
 void 
-init_scripting_api();
+ev_physicsmod_scriptapi_loader(
+    ScriptContextHandle ctx_h);
 
 // ECS stuff
 typedef struct {
@@ -38,7 +39,7 @@ EV_CONSTRUCTOR
   Data.script_mod = evol_loadmodule("script");
   if(Data.script_mod) {
     imports(Data.script_mod, (Script, ScriptInterface));
-    init_scripting_api();
+    ScriptInterface->registerAPILoadFn(ev_physicsmod_scriptapi_loader);
   }
 
   Data.game_mod = evol_loadmodule("game");
@@ -132,6 +133,7 @@ _ev_rigidbody_getcomponentfromentity(
   if(Object->hasComponent(scene, entt, Data.rigidbodyComponentID)) {
     return *(RigidbodyComponent*)Object->getComponent(scene, entt, Data.rigidbodyComponentID);
   }
+  /* ev_log_error("Couldn't find rigidbody component for entt %llu, scene %llu", entt, scene); */
   return (RigidbodyComponent) {
     .rbHandle = NULL
   };
@@ -209,32 +211,32 @@ _ev_rigidbody_setrotationeuler_wrapper(
 }
 
 void 
-init_scripting_api()
+ev_physicsmod_scriptapi_loader(
+    ScriptContextHandle ctx_h)
 {
-  if(!ScriptInterface) return;
+  ScriptType voidSType = ScriptInterface->getType(ctx_h, "void");
+  ScriptType floatSType = ScriptInterface->getType(ctx_h, "float");
+  ScriptType ullSType = ScriptInterface->getType(ctx_h, "unsigned long long");
 
-  ScriptType voidSType = ScriptInterface->getType("void");
-  ScriptType floatSType = ScriptInterface->getType("float");
-  ScriptType ullSType = ScriptInterface->getType("unsigned long long");
-
-  ScriptType rigidbodyHandleSType = ScriptInterface->addType("void*", sizeof(void*));
-  ScriptType rigidbodyComponentSType = ScriptInterface->addStruct("RigidbodyComponent", sizeof(RigidbodyComponent), 1, (ScriptStructMember[]) {
+  ScriptType rigidbodyHandleSType = ScriptInterface->addType(ctx_h, "void*", sizeof(void*));
+  ScriptType rigidbodyComponentSType = ScriptInterface->addStruct(ctx_h, "RigidbodyComponent", sizeof(RigidbodyComponent), 1, (ScriptStructMember[]) {
       {"handle", rigidbodyHandleSType, offsetof(RigidbodyComponent, rbHandle)}
   });
 
-  ScriptType vec3SType = ScriptInterface->addStruct("Vec3", sizeof(Vec3), 3, (ScriptStructMember[]) {
+  ScriptType vec3SType = ScriptInterface->addStruct(ctx_h, "Vec3", sizeof(Vec3), 3, (ScriptStructMember[]) {
       {"x", floatSType, offsetof(Vec3, x)},
       {"y", floatSType, offsetof(Vec3, y)},
       {"z", floatSType, offsetof(Vec3, z)}
   });
 
-  ScriptInterface->addFunction(_ev_rigidbody_addforce_wrapper, "ev_rigidbody_addforce", voidSType, 2, (ScriptType[]){rigidbodyHandleSType, vec3SType});
-  ScriptInterface->addFunction(_ev_rigidbody_getfromentity_wrapper, "ev_rigidbody_getfromentity", rigidbodyHandleSType, 1, (ScriptType[]){ullSType});
-  ScriptInterface->addFunction(_ev_rigidbody_getinvalidhandle_wrapper, "ev_rigidbody_getinvalidhandle", rigidbodyHandleSType, 0, NULL);
-  ScriptInterface->addFunction(_ev_rigidbody_getcomponentfromentity_wrapper, "ev_rigidbody_getcomponentfromentity", rigidbodyComponentSType, 1, (ScriptType[]){ullSType});
-  ScriptInterface->addFunction(_ev_rigidbody_setposition_wrapper, "ev_rigidbody_setposition", voidSType, 2, (ScriptType[]){rigidbodyHandleSType, vec3SType});
+  ScriptInterface->addFunction(ctx_h, _ev_rigidbody_addforce_wrapper, "ev_rigidbody_addforce", voidSType, 2, (ScriptType[]){rigidbodyHandleSType, vec3SType});
+  ScriptInterface->addFunction(ctx_h, _ev_rigidbody_getfromentity_wrapper, "ev_rigidbody_getfromentity", rigidbodyHandleSType, 1, (ScriptType[]){ullSType});
+  ScriptInterface->addFunction(ctx_h, _ev_rigidbody_getinvalidhandle_wrapper, "ev_rigidbody_getinvalidhandle", rigidbodyHandleSType, 0, NULL);
+  ScriptInterface->addFunction(ctx_h, _ev_rigidbody_getcomponentfromentity_wrapper, "ev_rigidbody_getcomponentfromentity", rigidbodyComponentSType, 1, (ScriptType[]){ullSType});
+  ScriptInterface->addFunction(ctx_h, _ev_rigidbody_setposition_wrapper, "ev_rigidbody_setposition", voidSType, 2, (ScriptType[]){rigidbodyHandleSType, vec3SType});
 
-  ScriptInterface->addFunction(_ev_rigidbody_setrotationeuler_wrapper, "ev_rigidbody_setrotationeuler", voidSType, 2, (ScriptType[]){rigidbodyHandleSType, vec3SType});
+  ScriptInterface->addFunction(ctx_h, _ev_rigidbody_setrotationeuler_wrapper, "ev_rigidbody_setrotationeuler", voidSType, 2, (ScriptType[]){rigidbodyHandleSType, vec3SType});
 
-  ScriptInterface->loadAPI("subprojects/evmod_physics/script_api.lua");
+  ScriptInterface->loadAPI(ctx_h, "subprojects/evmod_physics/script_api.lua");
+  ev_log_trace("Successfully loaded physics API");
 }
