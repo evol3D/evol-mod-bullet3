@@ -94,7 +94,7 @@ RigidbodyHandle
 _ev_rigidbody_addtoentity(
     GameScene game_scene,
     GameEntityID entt,
-    RigidbodyInfo *rbInfo)
+    RigidbodyInfo rbInfo)
 {
     RigidbodyComponent comp = {
         .rbHandle = _ev_rigidbody_new(game_scene, entt, rbInfo)

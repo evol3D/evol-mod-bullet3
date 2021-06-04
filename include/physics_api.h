@@ -28,7 +28,7 @@ RigidbodyHandle
 _ev_rigidbody_new(
     GenericHandle game_scene,
     U64 entt,
-    RigidbodyInfo *rbInfo);
+    RigidbodyInfo rbInfo);
 
 void
 _ev_rigidbody_setposition(

@@ -236,25 +236,25 @@ RigidbodyHandle
 _ev_rigidbody_new(
   GameScene game_scene,
   U64 entt,
-  RigidbodyInfo *rbInfo)
+  RigidbodyInfo rbInfo)
 {
   PhysicsWorldHandle world_handle = Scene->getPhysicsWorld(game_scene);
   PhysicsWorld &physWorld = PhysicsData.worlds[world_handle];
-  bool isDynamic = rbInfo->type == EV_RIGIDBODY_DYNAMIC && rbInfo->mass > 0.;
+  bool isDynamic = rbInfo.type == EV_RIGIDBODY_DYNAMIC && rbInfo.mass > 0.;
 
-  btCollisionShape *collisionShape = reinterpret_cast<btCollisionShape*>(rbInfo->collisionShape);
+  btCollisionShape *collisionShape = reinterpret_cast<btCollisionShape*>(rbInfo.collisionShape);
 
   btVector3 localInertia;
 
   if(isDynamic) {
-    collisionShape->calculateLocalInertia(rbInfo->mass, localInertia);
+    collisionShape->calculateLocalInertia(rbInfo.mass, localInertia);
   }
 
   EvMotionState *motionState = new EvMotionState();
   motionState->setGameObject(entt);
   motionState->setGameScene(game_scene);
-  btRigidBody::btRigidBodyConstructionInfo btRbInfo(rbInfo->mass, motionState, collisionShape, localInertia);
-  btRbInfo.m_restitution = rbInfo->restitution;
+  btRigidBody::btRigidBodyConstructionInfo btRbInfo(rbInfo.mass, motionState, collisionShape, localInertia);
+  btRbInfo.m_restitution = rbInfo.restitution;
 
   btRigidBody* body = new btRigidBody(btRbInfo);
   RigidbodyData *rbData = new RigidbodyData;
@@ -262,7 +262,7 @@ _ev_rigidbody_new(
   rbData->game_scene = game_scene;
   body->setUserPointer(rbData);
 
-  if(rbInfo->type == EV_RIGIDBODY_KINEMATIC) {
+  if(rbInfo.type == EV_RIGIDBODY_KINEMATIC) {
     body->setCollisionFlags(btCollisionObject::CF_KINEMATIC_OBJECT);
     body->setActivationState(DISABLE_DEACTIVATION);
   }
