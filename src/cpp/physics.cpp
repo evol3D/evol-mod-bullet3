@@ -196,9 +196,6 @@ _ev_physics_deinit()
     delete PhysicsData.debugDrawer;
   }
 
-  if(PhysicsData.game_mod) {
-    evol_unloadmodule(PhysicsData.game_mod);
-  }
 
   return 0;
 }
