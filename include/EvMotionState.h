@@ -17,15 +17,12 @@ class GameModuleRef
   public:
     GameModuleRef() {
       if(refcount++ == 0) {
-        game_module = evol_loadmodule("game");
+        game_module = evol_loadmodule_weak("game");
         IMPORT_NAMESPACE(Object, game_module);
       }
     }
 
     ~GameModuleRef() {
-      if(--refcount == 0) {
-        evol_unloadmodule(game_module);
-      }
     }
 };
 

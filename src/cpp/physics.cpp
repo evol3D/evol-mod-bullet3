@@ -159,7 +159,7 @@ _ev_physics_init()
   gContactStartedCallback = contactStartedCallback;
   gContactEndedCallback = contactEndedCallback;
 
-  PhysicsData.game_mod = evol_loadmodule("game");
+  PhysicsData.game_mod = evol_loadmodule_weak("game");
   if(PhysicsData.game_mod) {
     imports(PhysicsData.game_mod, (Scene));
   }

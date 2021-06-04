@@ -14,7 +14,7 @@
 BulletDbg::BulletDbg()
 {
     window_module = evol_loadmodule("window");
-    game_module = evol_loadmodule("game");
+    game_module = evol_loadmodule_weak("game");
     DEBUG_ASSERT(window_module);
     DEBUG_ASSERT(game_module);
     imports(window_module, (Window, DbgWindow, imGL));
@@ -29,7 +29,6 @@ BulletDbg::~BulletDbg()
 {
     DbgWindow->destroy(dbgWindow);
     evol_unloadmodule(window_module);
-    evol_unloadmodule(game_module);
 }
 
 #define bt2evVec3(v) {{v.x(), v.y(), v.z()}}

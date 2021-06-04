@@ -11,9 +11,6 @@
 #include <evol/meta/module_import.h>
 
 struct {
-  evolmodule_t ecs_mod;
-  evolmodule_t script_mod;
-  evolmodule_t game_mod;
   GameComponentID rigidbodyComponentID;
 } Data;
 
@@ -28,23 +25,24 @@ typedef struct {
 
 EV_CONSTRUCTOR 
 { 
-  Data.ecs_mod = evol_loadmodule("ecs");
-  if(Data.ecs_mod) {
-    imports(Data.ecs_mod, (GameECS));
+  evolmodule_t ecs_mod = evol_loadmodule_weak("ecs");
+  if(ecs_mod) {
+    imports(ecs_mod, (GameECS));
     if(GameECS) {
       Data.rigidbodyComponentID = GameECS->registerComponent("RigidbodyComponent", sizeof(RigidbodyComponent), EV_ALIGNOF(RigidbodyComponent));
     }
+    GameECS = NULL;
   }
 
-  Data.script_mod = evol_loadmodule("script");
-  if(Data.script_mod) {
-    imports(Data.script_mod, (Script, ScriptInterface));
+  evolmodule_t script_mod = evol_loadmodule_weak("script");
+  if(script_mod) {
+    imports(script_mod, (Script, ScriptInterface));
     ScriptInterface->registerAPILoadFn(ev_physicsmod_scriptapi_loader);
   }
 
-  Data.game_mod = evol_loadmodule("game");
-  if(Data.game_mod) {
-    imports(Data.game_mod, (Object));
+  evolmodule_t game_mod = evol_loadmodule_weak("game");
+  if(game_mod) {
+    imports(game_mod, (Object));
   }
 
   _ev_physics_init();
@@ -55,16 +53,6 @@ EV_CONSTRUCTOR
 
 EV_DESTRUCTOR 
 { 
-  if(Data.ecs_mod != NULL) {
-    evol_unloadmodule(Data.ecs_mod);
-  }
-  if(Data.script_mod != NULL) {
-    evol_unloadmodule(Data.script_mod);
-  }
-  if(Data.game_mod != NULL) {
-    evol_unloadmodule(Data.game_mod);
-  }
-
   return _ev_physics_deinit(); 
 } 
 
