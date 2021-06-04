@@ -104,6 +104,7 @@ ev_physicsworld_destroyworld(
     if(rb != nullptr) {
       delete rb->getMotionState();
       delete reinterpret_cast<RigidbodyData*>(rb->getUserPointer());
+      rb->setUserPointer(nullptr);
     }
 
 
@@ -244,7 +245,7 @@ _ev_rigidbody_new(
 
   btCollisionShape *collisionShape = reinterpret_cast<btCollisionShape*>(rbInfo.collisionShape);
 
-  btVector3 localInertia;
+  btVector3 localInertia(0.0, 0.0, 0.0);
 
   if(isDynamic) {
     collisionShape->calculateLocalInertia(rbInfo.mass, localInertia);
@@ -342,6 +343,9 @@ contactEndedCallback(
 {
   RigidbodyData *rbData0 = reinterpret_cast<RigidbodyData*>(manifold->getBody0()->getUserPointer());
   RigidbodyData *rbData1 = reinterpret_cast<RigidbodyData*>(manifold->getBody1()->getUserPointer());
+  if(rbData0 == nullptr || rbData1 == nullptr) {
+    return;
+  }
   _ev_physics_dispatch_collisionleave(
     rbData0->game_scene,
     static_cast<U64>(rbData0->entt_id),
