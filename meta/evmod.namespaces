@@ -1,5 +1,6 @@
 EV_NS_DEF_BEGIN(PhysicsWorld)
 
+EV_NS_DEF_FN(PhysicsWorldHandle, invalidHandle, (,))
 EV_NS_DEF_FN(PhysicsWorldHandle, newWorld, (,))
 EV_NS_DEF_FN(void, destroyWorld, (PhysicsWorldHandle, world))
 EV_NS_DEF_FN(U32, progress, (PhysicsWorldHandle, world), (F32, deltaTime))

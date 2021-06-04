@@ -1,6 +1,8 @@
 #include <evol/common/ev_types.h>
 #include <evol/common/ev_log.h>
 
+#define INVALID_WORLD_HANDLE (~0ull)
+
 #define TYPE_MODULE evmod_physics
 #include <evol/meta/type_import.h>
 
@@ -88,11 +90,24 @@ ev_physicsworld_newworld()
   return (PhysicsWorldHandle) (PhysicsData.worlds.size() - 1);
 }
 
+PhysicsWorldHandle
+ev_physicsworld_invalidhandle()
+{
+  return INVALID_WORLD_HANDLE;
+}
+
 void
 ev_physicsworld_destroyworld(
     PhysicsWorldHandle world_handle)
 {
+  if(world_handle == INVALID_WORLD_HANDLE) {
+    return;
+  }
   PhysicsWorld &physWorld = PhysicsData.worlds[world_handle];
+  if(physWorld.world == nullptr) {
+    return;
+  }
+
   std::lock_guard<std::mutex> guard(physWorld.worldMtx);
 
   // Clear collision objects

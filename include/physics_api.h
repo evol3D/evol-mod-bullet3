@@ -77,6 +77,9 @@ ev_physicsworld_progress(
     PhysicsWorldHandle world_handle,
     F32 deltaTime);
 
+PhysicsWorldHandle
+ev_physicsworld_invalidhandle();
+
 #if defined(__cplusplus)
 }
 #endif

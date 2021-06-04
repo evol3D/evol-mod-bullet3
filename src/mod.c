@@ -130,6 +130,7 @@ _ev_rigidbody_getcomponentfromentity(
 EV_BINDINGS
 {
     EV_NS_BIND_FN(PhysicsWorld, newWorld    , ev_physicsworld_newworld);
+    EV_NS_BIND_FN(PhysicsWorld, invalidHandle    , ev_physicsworld_invalidhandle);
     EV_NS_BIND_FN(PhysicsWorld, destroyWorld, ev_physicsworld_destroyworld);
     EV_NS_BIND_FN(PhysicsWorld, progress    , ev_physicsworld_progress);
 
