@@ -15,6 +15,12 @@ _ev_physics_update(
     F32 deltaTime);
 
 CollisionShapeHandle 
+_ev_collisionshape_newcapsule(
+    PhysicsWorldHandle world_handle,
+    F32 radius,
+    F32 height);
+
+CollisionShapeHandle 
 _ev_collisionshape_newbox(
     PhysicsWorldHandle world_handle,
     Vec3 half_extents);

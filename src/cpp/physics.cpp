@@ -222,6 +222,19 @@ _ev_physics_deinit()
   } while (0)
 
 CollisionShapeHandle
+_ev_collisionshape_newcapsule(
+  PhysicsWorldHandle world_handle,
+  F32 radius,
+  F32 height)
+{
+  btCollisionShape* capsule = new btCapsuleShape(radius, height);
+
+  STORE_COLLISION_SHAPE(world_handle, capsule);
+
+  return capsule;
+}
+
+CollisionShapeHandle
 _ev_collisionshape_newbox(
   PhysicsWorldHandle world_handle,
   Vec3 half_extents)
