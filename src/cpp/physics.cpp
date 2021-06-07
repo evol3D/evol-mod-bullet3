@@ -267,6 +267,7 @@ _ev_rigidbody_new(
   PhysicsWorldHandle world_handle = Scene->getPhysicsWorld(game_scene);
   PhysicsWorld &physWorld = PhysicsData.worlds[world_handle];
   bool isDynamic = rbInfo.type == EV_RIGIDBODY_DYNAMIC && rbInfo.mass > 0.;
+  bool isGhost = rbInfo.type == EV_RIGIDBODY_GHOST;
 
   btCollisionShape *collisionShape = reinterpret_cast<btCollisionShape*>(rbInfo.collisionShape);
 
@@ -291,6 +292,10 @@ _ev_rigidbody_new(
   if(rbInfo.type == EV_RIGIDBODY_KINEMATIC) {
     body->setCollisionFlags(btCollisionObject::CF_KINEMATIC_OBJECT);
     body->setActivationState(DISABLE_DEACTIVATION);
+  }
+
+  if(isGhost) {
+    body->setCollisionFlags(btCollisionObject::CF_NO_CONTACT_RESPONSE);
   }
 
   if(isDynamic) {

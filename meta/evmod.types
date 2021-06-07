@@ -6,7 +6,8 @@ TYPE(PhysicsWorldHandle, GenericHandle)
 TYPE(RigidbodyType, enum {
   EV_RIGIDBODY_DYNAMIC,
   EV_RIGIDBODY_KINEMATIC,
-  EV_RIGIDBODY_STATIC
+  EV_RIGIDBODY_STATIC,
+  EV_RIGIDBODY_GHOST
 })
 
 TYPE(RigidbodyInfo, struct {
