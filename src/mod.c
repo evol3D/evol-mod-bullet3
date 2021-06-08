@@ -16,6 +16,7 @@ struct {
 
 void 
 ev_physicsmod_scriptapi_loader(
+    EVNS_ScriptInterface *ScriptInterface,
     ScriptContextHandle ctx_h);
 
 // ECS stuff
