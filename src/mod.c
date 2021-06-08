@@ -202,6 +202,7 @@ _ev_rigidbody_setrotationeuler_wrapper(
 
 void 
 ev_physicsmod_scriptapi_loader(
+    EVNS_ScriptInterface *ScriptInterface,
     ScriptContextHandle ctx_h)
 {
   ScriptType voidSType = ScriptInterface->getType(ctx_h, "void");

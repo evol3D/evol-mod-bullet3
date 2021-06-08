@@ -85,7 +85,7 @@ BulletDbg::getDebugMode() const
 void 
 BulletDbg::startFrame()
 {
-    U32 width, height;
+    I32 width, height;
     Window->getSize(dbgWindow, &width, &height);
     DbgWindow->startFrame(dbgWindow);
 
