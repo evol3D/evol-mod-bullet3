@@ -6,16 +6,18 @@
 #define TYPE_MODULE evmod_physics
 #include <evol/meta/type_import.h>
 
-#include <physics_api.h>
 
 #include <btBulletDynamicsCommon.h>
 #include <btBulletCollisionCommon.h>
 
 #include "visual-dbg/BulletDbg.hpp"
 
+
 #include <mutex>
 
 #include <EvMotionState.h>
+
+#include <physics_api.h>
 
 #include <vector>
 
@@ -311,6 +313,34 @@ _ev_rigidbody_new(
   ev_log_trace("New rigidbody added to PhysicsWorld { %llu }. Current rigidbody count in that world = %llu", world_handle, physWorld.world->getNumCollisionObjects());
 
   return body;
+}
+
+RayHit
+ev_physics_raytest(
+    GameScene scene_handle,
+    Vec3 orig,
+    Vec3 dir,
+    float len)
+{
+  PhysicsWorldHandle world_handle = Scene->getPhysicsWorld(scene_handle);
+  PhysicsWorld &physWorld = PhysicsData.worlds[world_handle];
+
+  btVector3 from = ev2btVec3(orig);
+  btVector3 to = ev2btVec3(dir) * len;
+  btCollisionWorld::ClosestRayResultCallback rayResult(from, to);
+  physWorld.world->rayTest(from, to, rayResult);
+
+  RayHit hit;
+  hit.hasHit = rayResult.hasHit();
+  hit.hitPoint = bt2evVec3(rayResult.m_hitPointWorld);
+  hit.hitNormal = bt2evVec3(rayResult.m_hitNormalWorld);
+  if(hit.hasHit) {
+    hit.object_id = reinterpret_cast<RigidbodyData*>(rayResult.m_collisionObject->getUserPointer())->entt_id;
+  } else {
+    hit.object_id = 0;
+  }
+
+  return hit;
 }
 
 void

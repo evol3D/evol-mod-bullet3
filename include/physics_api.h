@@ -4,6 +4,13 @@
 extern "C" {
 #endif
 
+typedef struct {
+  Vec3 hitPoint;
+  Vec3 hitNormal;
+  U64 object_id;
+  bool hasHit;
+} RayHit;
+
 I32 
 _ev_physics_init();
 
@@ -85,6 +92,13 @@ ev_physicsworld_progress(
 
 PhysicsWorldHandle
 ev_physicsworld_invalidhandle();
+
+RayHit
+ev_physics_raytest(
+    GameScene scene_handle,
+    Vec3 orig,
+    Vec3 dir,
+    float len);
 
 #if defined(__cplusplus)
 }

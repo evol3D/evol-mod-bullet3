@@ -36,3 +36,17 @@ end
 ComponentGetters[Rigidbody] = function(entt)
   return RigidbodyComponent:new(C('ev_rigidbody_getcomponentfromentity', entt))
 end
+
+function rayCast(orig, dir, len)
+  res = C('ev_physics_raytest', orig, dir, len)
+
+  hitPoint = Vec3:new(res.hitPoint.x, res.hitPoint.y, res.hitPoint.z)
+  hitNormal = Vec3:new(res.hitNormal.x, res.hitNormal.y, res.hitNormal.z)
+  object = Entities[res.object_id]
+
+  res.hitPoint = hitPoint
+  res.hitNormal = hitNormal
+  res.object = object
+
+  return res
+end

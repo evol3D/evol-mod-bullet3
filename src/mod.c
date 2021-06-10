@@ -1,7 +1,6 @@
 #define EV_MODULE_DEFINE
 #include <evol/evolmod.h>
 
-#include <physics_api.h>
 
 #define IMPORT_MODULE evmod_ecs
 #include <evol/meta/module_import.h>
@@ -9,6 +8,8 @@
 #include <evol/meta/module_import.h>
 #define IMPORT_MODULE evmod_game
 #include <evol/meta/module_import.h>
+
+#include <physics_api.h>
 
 struct {
   GameComponentID rigidbodyComponentID;
@@ -201,11 +202,32 @@ _ev_rigidbody_setrotationeuler_wrapper(
         rot->z));
 }
 
+void
+ev_physics_raytest_wrapper(
+    EV_UNALIGNED RayHit *out,
+    EV_UNALIGNED Vec3 *orig,
+    EV_UNALIGNED Vec3 *dir,
+    EV_UNALIGNED float *len)
+{
+  RayHit res = ev_physics_raytest(NULL, 
+      Vec3new(orig->x, orig->y, orig->z),
+      Vec3new(dir->x, dir->y, dir->z),
+      *len);
+
+  *out = (RayHit) {
+    .hasHit = res.hasHit,
+    .hitPoint = Vec3new(res.hitPoint.x, res.hitPoint.y, res.hitPoint.z),
+    .hitNormal = Vec3new(res.hitNormal.x, res.hitNormal.y, res.hitNormal.z),
+    .object_id = res.object_id
+  };
+}
+
 void 
 ev_physicsmod_scriptapi_loader(
     EVNS_ScriptInterface *ScriptInterface,
     ScriptContextHandle ctx_h)
 {
+  ScriptType boolSType = ScriptInterface->getType(ctx_h, "bool");
   ScriptType voidSType = ScriptInterface->getType(ctx_h, "void");
   ScriptType floatSType = ScriptInterface->getType(ctx_h, "float");
   ScriptType ullSType = ScriptInterface->getType(ctx_h, "unsigned long long");
@@ -221,6 +243,13 @@ ev_physicsmod_scriptapi_loader(
       {"z", floatSType, offsetof(Vec3, z)}
   });
 
+  ScriptType rayHitSType = ScriptInterface->addStruct(ctx_h, "RayHit", sizeof(RayHit), 4, (ScriptStructMember[]) {
+      {"hitPoint", vec3SType, offsetof(RayHit, hitPoint)},
+      {"hitNormal", vec3SType, offsetof(RayHit, hitNormal)},
+      {"object_id", ullSType, offsetof(RayHit, object_id)},
+      {"hasHit", boolSType, offsetof(RayHit, hasHit)}
+  });
+
   ScriptInterface->addFunction(ctx_h, _ev_rigidbody_addforce_wrapper, "ev_rigidbody_addforce", voidSType, 2, (ScriptType[]){rigidbodyHandleSType, vec3SType});
   ScriptInterface->addFunction(ctx_h, _ev_rigidbody_getfromentity_wrapper, "ev_rigidbody_getfromentity", rigidbodyHandleSType, 1, (ScriptType[]){ullSType});
   ScriptInterface->addFunction(ctx_h, _ev_rigidbody_getinvalidhandle_wrapper, "ev_rigidbody_getinvalidhandle", rigidbodyHandleSType, 0, NULL);
@@ -228,6 +257,9 @@ ev_physicsmod_scriptapi_loader(
   ScriptInterface->addFunction(ctx_h, _ev_rigidbody_setposition_wrapper, "ev_rigidbody_setposition", voidSType, 2, (ScriptType[]){rigidbodyHandleSType, vec3SType});
 
   ScriptInterface->addFunction(ctx_h, _ev_rigidbody_setrotationeuler_wrapper, "ev_rigidbody_setrotationeuler", voidSType, 2, (ScriptType[]){rigidbodyHandleSType, vec3SType});
+
+  ScriptInterface->addFunction(ctx_h, ev_physics_raytest_wrapper, "ev_physics_raytest", rayHitSType, 3, (ScriptType[]){vec3SType, vec3SType, floatSType});
+
 
   ScriptInterface->loadAPI(ctx_h, "subprojects/evmod_physics/script_api.lua");
   ev_log_trace("Successfully loaded physics API");
