@@ -6,6 +6,8 @@
 #define TYPE_MODULE evmod_physics
 #include <evol/meta/type_import.h>
 
+#define IMPORT_MODULE evmod_assets
+#include <evol/meta/module_import.h>
 
 #include <btBulletDynamicsCommon.h>
 #include <btBulletCollisionCommon.h>
@@ -62,6 +64,7 @@ struct ev_PhysicsData {
   BulletDbg *debugDrawer;
 
   evolmodule_t game_mod;
+  evolmodule_t asset_mod;
 
   bool visualizationEnabled;
 } PhysicsData;
@@ -182,6 +185,11 @@ _ev_physics_init()
     imports(PhysicsData.game_mod, (Scene));
   }
 
+  PhysicsData.asset_mod = evol_loadmodule_weak("assetmanager");
+  if(PhysicsData.asset_mod) {
+    imports(PhysicsData.asset_mod, (Asset, MeshLoader));
+  }
+
   return 0;
 }
 
@@ -246,6 +254,31 @@ _ev_collisionshape_newbox(
   STORE_COLLISION_SHAPE(world_handle, box);
 
   return box;
+}
+
+CollisionShapeHandle 
+_ev_collisionshape_newmesh(
+    PhysicsWorldHandle world_handle,
+    CONST_STR mesh_path)
+{
+  AssetHandle mesh_handle = Asset->load(mesh_path);
+  MeshAsset meshAsset = MeshLoader->loadAsset(mesh_handle);
+
+  btStridingMeshInterface* buffer_interface = new btTriangleIndexVertexArray(
+      meshAsset.indexCount / 3,
+      reinterpret_cast<int*>(meshAsset.indexData),
+      sizeof(U32),
+      /* meshAsset.indexBuferSize / meshAsset.indexCount, */
+      meshAsset.vertexCount,
+      meshAsset.vertexData,
+      meshAsset.vertexBuferSize / meshAsset.vertexCount);
+
+  btCollisionShape* mesh = new btBvhTriangleMeshShape(buffer_interface, true);
+  STORE_COLLISION_SHAPE(world_handle, mesh);
+
+  Asset->free(mesh_handle);
+
+  return mesh;
 }
 
 CollisionShapeHandle

@@ -22,6 +22,11 @@ _ev_physics_update(
     F32 deltaTime);
 
 CollisionShapeHandle 
+_ev_collisionshape_newmesh(
+    PhysicsWorldHandle world_handle,
+    CONST_STR mesh_path);
+
+CollisionShapeHandle 
 _ev_collisionshape_newcapsule(
     PhysicsWorldHandle world_handle,
     F32 radius,

@@ -26,5 +26,6 @@ EV_NS_DEF_BEGIN(CollisionShape)
 EV_NS_DEF_FN(CollisionShapeHandle, newBox, (PhysicsWorldHandle, world), (Vec3, half_extents))
 EV_NS_DEF_FN(CollisionShapeHandle, newSphere, (PhysicsWorldHandle, world), (F32, radius))
 EV_NS_DEF_FN(CollisionShapeHandle, newCapsule, (PhysicsWorldHandle, world), (F32, radius), (F32, height))
+EV_NS_DEF_FN(CollisionShapeHandle, newMesh, (PhysicsWorldHandle, world), (CONST_STR, mesh_path))
 
 EV_NS_DEF_END(CollisionShape)

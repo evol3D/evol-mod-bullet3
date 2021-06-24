@@ -139,6 +139,7 @@ EV_BINDINGS
     EV_NS_BIND_FN(CollisionShape, newBox, _ev_collisionshape_newbox);
     EV_NS_BIND_FN(CollisionShape, newSphere, _ev_collisionshape_newsphere);
     EV_NS_BIND_FN(CollisionShape, newCapsule, _ev_collisionshape_newcapsule);
+    EV_NS_BIND_FN(CollisionShape, newMesh, _ev_collisionshape_newmesh);
 
     EV_NS_BIND_FN(Rigidbody, setPosition, _ev_rigidbody_setposition);
     EV_NS_BIND_FN(Rigidbody, getPosition, _ev_rigidbody_getposition);
