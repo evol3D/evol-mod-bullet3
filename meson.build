@@ -60,10 +60,12 @@ if cc_id == 'gcc'
 endif
 
 module = shared_module(
-  'evmod_bullet', mod_src,
+  'bullet', mod_src,
   include_directories: mod_incdir,
   dependencies: mod_deps,
   cpp_args: mod_cpp_args,
+  name_prefix: evmod_name_prefix,
+  name_suffix: evmod_name_suffix,
 )
 
 mod_dep = declare_dependency(
