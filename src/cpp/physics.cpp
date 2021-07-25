@@ -266,9 +266,8 @@ _ev_collisionshape_newmesh(
 
   btStridingMeshInterface* buffer_interface = new btTriangleIndexVertexArray(
       meshAsset.indexCount / 3,
-      reinterpret_cast<int*>(meshAsset.indexData),
-      sizeof(U32),
-      /* meshAsset.indexBuferSize / meshAsset.indexCount, */
+      reinterpret_cast<int32_t*>(meshAsset.indexData),
+      meshAsset.indexBuferSize / meshAsset.indexCount * 3,
       meshAsset.vertexCount,
       meshAsset.vertexData,
       meshAsset.vertexBuferSize / meshAsset.vertexCount);
@@ -385,6 +384,16 @@ _ev_rigidbody_setposition(
   body->getWorldTransform().setOrigin(ev2btVec3(pos));
 }
 
+void
+_ev_rigidbody_setvelocity(
+    RigidbodyHandle rb,
+    Vec3 vel)
+{
+  btRigidBody* body = reinterpret_cast<btRigidBody *>(rb);
+  body->setLinearVelocity(ev2btVec3(vel));
+}
+
+
 Vec3
 _ev_rigidbody_getposition(
     RigidbodyHandle rb)
@@ -392,6 +401,15 @@ _ev_rigidbody_getposition(
   btRigidBody* body = reinterpret_cast<btRigidBody *>(rb);
   btVector3 &position = body->getWorldTransform().getOrigin();
   return bt2evVec3(position);
+}
+
+Vec3
+_ev_rigidbody_getvelocity(
+    RigidbodyHandle rb)
+{
+  btRigidBody* body = reinterpret_cast<btRigidBody *>(rb);
+  const btVector3 &velocity = body->getLinearVelocity();
+  return bt2evVec3(velocity);
 }
 
 void
@@ -412,6 +430,24 @@ _ev_rigidbody_addforce(
 {
   btRigidBody* body = reinterpret_cast<btRigidBody *>(rb);
   body->applyCentralForce(ev2btVec3(f));
+}
+
+void
+_ev_rigidbody_destroy(
+  GameScene game_scene,
+  RigidbodyHandle rb)
+{
+  PhysicsWorldHandle world_handle = Scene->getPhysicsWorld(game_scene);
+  PhysicsWorld &physWorld = PhysicsData.worlds[world_handle];
+  btRigidBody* body = reinterpret_cast<btRigidBody *>(rb);
+  if(body != nullptr) {
+    delete body->getMotionState();
+    delete reinterpret_cast<RigidbodyData*>(body->getUserPointer());
+    body->setUserPointer(nullptr);
+  }
+
+  physWorld.world->removeRigidBody(body);
+  delete body;
 }
 
 // ==========================

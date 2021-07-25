@@ -94,7 +94,9 @@ BulletDbg::startFrame()
     Matrix4x4 projectionMat;
     Matrix4x4 viewMat;
     Camera->getViewMat(NULL, activeCamera, viewMat);
+
     Camera->getProjectionMat(NULL, activeCamera, projectionMat);
+    projectionMat[1][1] *= -1;
 
     imGL->setViewport(0, 0, width, height);
     imGL->setCameraViewMat(viewMat);

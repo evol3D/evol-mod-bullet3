@@ -25,15 +25,28 @@ typedef struct {
     RigidbodyHandle rbHandle;
 } RigidbodyComponent;
 
+void
+RigidbodyComponentOnRemoveTrigger(
+    ECSQuery query)
+{
+  RigidbodyComponent *rbComp = ECS->getQueryColumn(query, sizeof(RigidbodyComponent), 1);
+  U32 count = ECS->getQueryMatchCount(query);
+
+  for(U32 i = 0; i < count; i++) {
+    RigidbodyComponent rb = rbComp[i];
+    _ev_rigidbody_destroy(0, rb.rbHandle);
+  }
+}
+
 EV_CONSTRUCTOR 
 { 
   evolmodule_t ecs_mod = evol_loadmodule_weak("ecs");
   if(ecs_mod) {
-    imports(ecs_mod, (GameECS));
+    imports(ecs_mod, (ECS, GameECS));
     if(GameECS) {
       Data.rigidbodyComponentID = GameECS->registerComponent("RigidbodyComponent", sizeof(RigidbodyComponent), EV_ALIGNOF(RigidbodyComponent));
+      GameECS->setOnRemoveTrigger("RigidbodyComponentOnRemoveTrigger", "RigidbodyComponent", RigidbodyComponentOnRemoveTrigger);
     }
-    GameECS = NULL;
   }
 
   evolmodule_t script_mod = evol_loadmodule_weak("script");
@@ -44,7 +57,7 @@ EV_CONSTRUCTOR
 
   evolmodule_t game_mod = evol_loadmodule_weak("game");
   if(game_mod) {
-    imports(game_mod, (Object));
+    imports(game_mod, (Scene, Object));
   }
 
   _ev_physics_init();
@@ -101,7 +114,9 @@ _ev_rigidbody_addtoentity(
     RigidbodyComponent comp = {
         .rbHandle = _ev_rigidbody_new(game_scene, entt, rbInfo)
     };
-    Object->setComponent(game_scene, entt, Data.rigidbodyComponentID, &comp);
+    ECSGameWorldHandle ecs_world = Scene->getECSWorld(game_scene);
+    GameECS->setComponent(ecs_world, entt, Data.rigidbodyComponentID, &comp);
+    /* ev_log_trace("Set RigidbodyComponent for entity %llu", entt); */
 
     return comp.rbHandle;
 }
@@ -120,13 +135,14 @@ _ev_rigidbody_getcomponentfromentity(
     GameScene scene,
     ECSEntityID entt)
 {
-  if(Object->hasComponent(scene, entt, Data.rigidbodyComponentID)) {
-    return *(RigidbodyComponent*)Object->getComponent(scene, entt, Data.rigidbodyComponentID);
+  ECSGameWorldHandle ecs_world = Scene->getECSWorld(scene);
+  const RigidbodyComponent *component = GameECS->getComponent(ecs_world, entt, Data.rigidbodyComponentID);
+  if(component) {
+    return *component;
+  } else {
+    /* ev_log_trace("Didn't find RigidbodyComponent for entity %llu", entt); */
+    return (RigidbodyComponent) { NULL };
   }
-  /* ev_log_error("Couldn't find rigidbody component for entt %llu, scene %llu", entt, scene); */
-  return (RigidbodyComponent) {
-    .rbHandle = NULL
-  };
 }
 
 EV_BINDINGS
@@ -193,6 +209,17 @@ _ev_rigidbody_setposition_wrapper(
 }
 
 void
+_ev_rigidbody_setvelocity_wrapper(
+    EV_UNALIGNED RigidbodyHandle *handle,
+    EV_UNALIGNED Vec3 *vel)
+{
+  _ev_rigidbody_setvelocity(*handle, Vec3new(
+        vel->x,
+        vel->y,
+        vel->z));
+}
+
+void
 _ev_rigidbody_setrotationeuler_wrapper(
     EV_UNALIGNED RigidbodyHandle *handle,
     EV_UNALIGNED Vec3 *rot)
@@ -256,6 +283,7 @@ ev_physicsmod_scriptapi_loader(
   ScriptInterface->addFunction(ctx_h, _ev_rigidbody_getinvalidhandle_wrapper, "ev_rigidbody_getinvalidhandle", rigidbodyHandleSType, 0, NULL);
   ScriptInterface->addFunction(ctx_h, _ev_rigidbody_getcomponentfromentity_wrapper, "ev_rigidbody_getcomponentfromentity", rigidbodyComponentSType, 1, (ScriptType[]){ullSType});
   ScriptInterface->addFunction(ctx_h, _ev_rigidbody_setposition_wrapper, "ev_rigidbody_setposition", voidSType, 2, (ScriptType[]){rigidbodyHandleSType, vec3SType});
+  ScriptInterface->addFunction(ctx_h, _ev_rigidbody_setvelocity_wrapper, "ev_rigidbody_setvelocity", voidSType, 2, (ScriptType[]){rigidbodyHandleSType, vec3SType});
 
   ScriptInterface->addFunction(ctx_h, _ev_rigidbody_setrotationeuler_wrapper, "ev_rigidbody_setrotationeuler", voidSType, 2, (ScriptType[]){rigidbodyHandleSType, vec3SType});
 

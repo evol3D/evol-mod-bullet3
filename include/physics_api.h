@@ -58,6 +58,15 @@ _ev_rigidbody_getposition(
     RigidbodyHandle rb);
 
 void
+_ev_rigidbody_setvelocity(
+    RigidbodyHandle rb,
+    Vec3 vel);
+
+Vec3
+_ev_rigidbody_getvelocity(
+    RigidbodyHandle rb);
+
+void
 _ev_rigidbody_setrotationeuler(
     RigidbodyHandle rb,
     Vec3 rot);
@@ -66,6 +75,11 @@ void
 _ev_rigidbody_addforce(
     RigidbodyHandle rb,
     Vec3 f);
+
+void
+_ev_rigidbody_destroy(
+  GameScene game_scene,
+  RigidbodyHandle rb);
 
 void
 _ev_physics_dispatch_collisionenter(

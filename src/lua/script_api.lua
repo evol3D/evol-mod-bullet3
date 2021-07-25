@@ -29,6 +29,15 @@ function RigidbodyComponent:setPosition(new_pos)
   C('ev_rigidbody_setposition', self.handle, new_pos)
 end
 
+function RigidbodyComponent:setVelocity(new_vel)
+  C('ev_rigidbody_setvelocity', self.handle, new_vel)
+end
+
+function RigidbodyComponent:getVelocity()
+  local vel = C('ev_rigidbody_getvelocity', self.handle)
+  return Vec3:new(vel.x, vel.y, vel.z)
+end
+
 function RigidbodyComponent:setRotation(new_rot)
   C('ev_rigidbody_setrotationeuler', self.handle, new_rot)
 end
